@@ -1,0 +1,54 @@
+# Respaldo de la base de Bar Beer y anti-pausa del proyecto gratuito de Supabase.
+# Corre lunes y jueves a las 4:00 a. m. de Colombia (09:00 UTC): dos veces por semana para que el
+# proyecto nunca pase 7 días sin actividad. También se puede correr a mano desde la pestaña Actions.
+#
+# Secretos del repositorio (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL   cadena de conexión de Postgres (Project Settings → Database → Connection string, "Session pooler")
+#   SUPABASE_URL      URL del proyecto (https://<ref>.supabase.co)
+#   SUPABASE_ANON_KEY clave anon
+#
+# El respaldo trae teléfonos de clientes: el repositorio TIENE que ser privado.
+name: Respaldo
+
+on:
+  schedule:
+    - cron: '0 9 * * 1,4'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Exportar roles, esquema y datos
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir respaldo
+          supabase db dump --remote="$DB_URL" -f respaldo/roles.sql --role-only
+          supabase db dump --remote="$DB_URL" -f respaldo/esquema.sql
+          supabase db dump --remote="$DB_URL" -f respaldo/datos.sql --use-copy --data-only -x "storage.buckets_vectors" -x "storage.vector_indexes"
+          # Un respaldo vacío es peor que ninguno: falla si no trae ventas ni usuarios.
+          grep -q 'public.sales' respaldo/datos.sql
+          grep -q 'auth.users' respaldo/datos.sql
+          ls -l respaldo
+
+      - name: Mantener el proyecto despierto
+        env:
+          URL: ${{ secrets.SUPABASE_URL }}
+          KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: curl -fsS "$URL/rest/v1/rpc/get_receipt" -H "apikey: $KEY" -H "Content-Type: application/json" -d '{"p_token":"despierto"}' -o /dev/null
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-${{ github.run_number }}
+          path: respaldo
+          retention-days: 90
+          if-no-files-found: error

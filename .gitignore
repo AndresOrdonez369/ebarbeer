@@ -1,0 +1,18 @@
+node_modules
+/build
+/.svelte-kit
+.env
+.env.*
+!.env.example
+!.env.demo
+.DS_Store
+supabase/.temp
+supabase/.branches
+.impeccable/config.local.json
+.impeccable/review
+
+# Design workflow scratch (mockups, question rounds); the system lives in DESIGN.md and .impeccable/design.json.
+.impeccable/mocks
+.impeccable/questions
+.impeccable/decision-payload*.json
+.claude/settings.local.json

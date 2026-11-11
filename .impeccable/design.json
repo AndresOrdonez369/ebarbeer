@@ -1,0 +1,821 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T06:39:50.059Z",
+  "title": "Design System: Bar Beer",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Negro de barra",
+        "canonical": "#0c0906",
+        "tonalRamp": [
+          "#0e0b07",
+          "#27231f",
+          "#433f3b",
+          "#615d58",
+          "#817c77",
+          "#a29e98",
+          "#c8c3be",
+          "#f2eee8"
+        ]
+      },
+      "bg-seam": {
+        "role": "neutral",
+        "displayName": "Veta de tablón",
+        "canonical": "rgb(255 255 255 / 0.035)"
+      },
+      "wood": {
+        "role": "neutral",
+        "displayName": "Madera",
+        "canonical": "#1a120b",
+        "tonalRamp": [
+          "#110904",
+          "#2b221b",
+          "#473e36",
+          "#665b53",
+          "#867b72",
+          "#a79c93",
+          "#cdc2b8",
+          "#f8ece2"
+        ]
+      },
+      "wood-raised": {
+        "role": "neutral",
+        "displayName": "Madera alzada",
+        "canonical": "#23180e",
+        "tonalRamp": [
+          "#130902",
+          "#2d2117",
+          "#4a3d32",
+          "#685b4f",
+          "#897a6e",
+          "#aa9b8f",
+          "#d0c1b4",
+          "#fbebde"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Filete",
+        "canonical": "#3a2a1c",
+        "tonalRamp": [
+          "#150800",
+          "#302013",
+          "#4d3c2d",
+          "#6c5a4a",
+          "#8c7969",
+          "#ae9a8a",
+          "#d5c0af",
+          "#feebda"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Filete fuerte",
+        "canonical": "#5a4330",
+        "tonalRamp": [
+          "#180600",
+          "#331f0c",
+          "#513a28",
+          "#705845",
+          "#917863",
+          "#b39983",
+          "#dabea8",
+          "#feebdc"
+        ]
+      },
+      "foam": {
+        "role": "neutral",
+        "displayName": "Espuma",
+        "canonical": "#f7ecd2",
+        "tonalRamp": [
+          "#110a00",
+          "#2b230e",
+          "#483f29",
+          "#665d46",
+          "#867c65",
+          "#a89e85",
+          "#cec3aa",
+          "#f9eed4"
+        ]
+      },
+      "foam-dim": {
+        "role": "neutral",
+        "displayName": "Espuma apagada",
+        "canonical": "#a8977f",
+        "tonalRamp": [
+          "#140800",
+          "#2f210c",
+          "#4c3d28",
+          "#6b5b45",
+          "#8b7b63",
+          "#ad9c84",
+          "#d3c1a8",
+          "#feecd2"
+        ]
+      },
+      "foam-faint": {
+        "role": "neutral",
+        "displayName": "Espuma tenue",
+        "canonical": "#8c7c67",
+        "tonalRamp": [
+          "#150900",
+          "#302312",
+          "#4e402e",
+          "#6d5e4b",
+          "#8c7c67",
+          "#ae9e89",
+          "#d4c3ae",
+          "#fdedd7"
+        ]
+      },
+      "amber": {
+        "role": "primary",
+        "displayName": "Ámbar cerveza",
+        "canonical": "#f2a20c",
+        "tonalRamp": [
+          "#160700",
+          "#341f00",
+          "#583802",
+          "#7e540f",
+          "#a77117",
+          "#d48e0e",
+          "#fdb449",
+          "#feebd4"
+        ]
+      },
+      "amber-light": {
+        "role": "primary",
+        "displayName": "Ámbar claro",
+        "canonical": "#f7b52c",
+        "tonalRamp": [
+          "#160700",
+          "#341f00",
+          "#583802",
+          "#7e540f",
+          "#a77117",
+          "#d48e0e",
+          "#fdb449",
+          "#feebd4"
+        ]
+      },
+      "amber-deep": {
+        "role": "primary",
+        "displayName": "Ámbar profundo",
+        "canonical": "#c97806",
+        "tonalRamp": [
+          "#190500",
+          "#381c00",
+          "#5e3400",
+          "#864f07",
+          "#b16a0b",
+          "#db8928",
+          "#feb164",
+          "#ffead8"
+        ]
+      },
+      "amber-ink": {
+        "role": "primary",
+        "displayName": "Tinta ámbar",
+        "canonical": "#1c1203",
+        "tonalRamp": [
+          "#130900",
+          "#2d2211",
+          "#493e2c",
+          "#685c49",
+          "#887b68",
+          "#aa9c88",
+          "#d0c2ad",
+          "#fbecd7"
+        ]
+      },
+      "red": {
+        "role": "secondary",
+        "displayName": "Rojo del logo",
+        "canonical": "#d8121f",
+        "tonalRamp": [
+          "#210000",
+          "#4b0003",
+          "#7b070d",
+          "#ac1b1e",
+          "#e3262a",
+          "#fa695f",
+          "#fcaca3",
+          "#ffe9e6"
+        ]
+      },
+      "red-hover": {
+        "role": "secondary",
+        "displayName": "Rojo encendido",
+        "canonical": "#e8222f",
+        "tonalRamp": [
+          "#210000",
+          "#4c0004",
+          "#7c020f",
+          "#ae1520",
+          "#e51d2d",
+          "#fc6761",
+          "#fdaba4",
+          "#ffe9e6"
+        ]
+      },
+      "red-lip": {
+        "role": "secondary",
+        "displayName": "Labio rojo",
+        "canonical": "#7e0a12",
+        "tonalRamp": [
+          "#210000",
+          "#4b0004",
+          "#7b050f",
+          "#a0312f",
+          "#c5544e",
+          "#eb766e",
+          "#fcaca4",
+          "#ffe9e6"
+        ]
+      },
+      "red-lip-deep": {
+        "role": "secondary",
+        "displayName": "Labio rojo hondo",
+        "canonical": "#3d0509",
+        "tonalRamp": [
+          "#210000",
+          "#4b0004",
+          "#7b050f",
+          "#a0312f",
+          "#c5544e",
+          "#eb766e",
+          "#fcaca4",
+          "#ffe9e6"
+        ]
+      },
+      "blue": {
+        "role": "tertiary",
+        "displayName": "Azul del logo",
+        "canonical": "#2a4fb5",
+        "tonalRamp": [
+          "#010038",
+          "#030873",
+          "#133296",
+          "#2e54ba",
+          "#4c76e0",
+          "#709afc",
+          "#a8c4ff",
+          "#e7effe"
+        ]
+      },
+      "blue-ink": {
+        "role": "tertiary",
+        "displayName": "Tinta azul",
+        "canonical": "#c9d4f5",
+        "tonalRamp": [
+          "#05091f",
+          "#1b223b",
+          "#363e59",
+          "#535c79",
+          "#737c9a",
+          "#939dbd",
+          "#b8c3e4",
+          "#e9eefe"
+        ]
+      },
+      "chrome": {
+        "role": "neutral",
+        "displayName": "Cromo",
+        "canonical": "#e8eaed",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#232426",
+          "#3e4042",
+          "#5c5e60",
+          "#7c7d80",
+          "#9d9ea1",
+          "#c2c4c7",
+          "#edeff2"
+        ]
+      },
+      "danger-text": {
+        "role": "secondary",
+        "displayName": "Texto de error",
+        "canonical": "#ff6b6b",
+        "tonalRamp": [
+          "#210001",
+          "#4b0008",
+          "#7b0316",
+          "#ad1628",
+          "#d34347",
+          "#fb6768",
+          "#fdaca7",
+          "#ffe9e7"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Cifra de cortes del barbero junto a su jarra grande (ámbar); 'Cobrada' y vueltas a entregar en 900."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Total del día, total a pagar, vueltas en el pago, total de la boleta pública (900) y cifra de la jarra de hoy en Metas; títulos de página en 800."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Cobrar con total, importes de Hoy, cortes del día, títulos de estados vacíos, roles del ingreso, línea de avance de un bono y tira de totales del historial (900); 'Boleta N.º' y 'Gracias, <nombre>'."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Precios, conteos bajo jarras, importes de la cuenta, montos en campos de pago, encabezados de bloque, comisión por servicio, conteos e importes del historial, premios y bonos ganados, y texto de los botones de espuma."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto base, cifras tabulares."
+      },
+      "body-sm": {
+        "displayName": "Body small",
+        "purpose": "Notas, ayudas y líneas de la cuenta; 44-52ch."
+      },
+      "name": {
+        "displayName": "Name",
+        "purpose": "Nombres de ítems, servicios y bonos, pestañas del catálogo y de periodo, día o mes de las filas del historial, persona en la cabecera."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Rótulos en mayúsculas de cifras y campos, y barra de pestañas. Nunca antetítulo de sección."
+      }
+    },
+    "shadows": [
+      {
+        "name": "red-lip",
+        "value": "0 3px 0 var(--red-lip)",
+        "purpose": "Labio duro inferior del botón rojo de acción principal; desaparece al pulsar."
+      },
+      {
+        "name": "red-lip-disabled",
+        "value": "0 3px 0 var(--red-lip-deep)",
+        "purpose": "Labio del botón rojo desactivado (relleno labio rojo)."
+      },
+      {
+        "name": "plate",
+        "value": "0 2px 0 #000, 0 6px 14px rgb(0 0 0 / 0.6)",
+        "purpose": "Solo la placa BAR BEER que reproduce el logo."
+      },
+      {
+        "name": "field-focus",
+        "value": "0 0 0 1px var(--amber)",
+        "purpose": "Engrosa el borde ámbar del campo enfocado."
+      }
+    ],
+    "motion": [
+      {
+        "name": "t-fast",
+        "value": "150ms",
+        "purpose": "Todo cambio de estado: hover, pestañas, selección, entrada de líneas de la cuenta."
+      },
+      {
+        "name": "t-move",
+        "value": "450ms",
+        "purpose": "Subida de nivel de la jarra y de la barra de nivel, rebose de espuma de la jarra y golpe del sello META."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Curva de nivel, rebose, sello y entrada de líneas."
+      },
+      {
+        "name": "pour",
+        "value": "900ms var(--ease-out), once per session",
+        "purpose": "Vertido inicial de las jarras y de las barras de nivel en la primera pantalla de la sesión."
+      },
+      {
+        "name": "fizz",
+        "value": "1.2s linear, stops after 1.6s",
+        "purpose": "Burbujas solo mientras cambia un conteo; luego reposan."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation/transition-duration: 1ms",
+        "purpose": "prefers-reduced-motion convierte todo en cambios instantáneos."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "app-max",
+        "value": "520px"
+      }
+    ],
+    "exceptions": [
+      {
+        "name": "bill-panel-square",
+        "value": "border-top: 3px solid var(--amber); border-radius: 0",
+        "purpose": "Excepción deliberada a las esquinas de 4 px; el detector la marca como border-accent-on-rounded."
+      },
+      {
+        "name": "amber-light-literal",
+        "value": "#f7b52c en Mug.svelte",
+        "purpose": "Token documentado como amber-light; en el código sigue siendo literal, sin propiedad CSS."
+      },
+      {
+        "name": "mug-radii",
+        "value": "calc(var(--w) * 0.12 | 0.15 | 0.2)",
+        "purpose": "Radios de la jarra proporcionales a su tamaño."
+      },
+      {
+        "name": "plate-literals",
+        "value": "#000, 22px",
+        "purpose": "La placa reproduce el logo."
+      },
+      {
+        "name": "tabbar-dense",
+        "value": "0.6875rem",
+        "purpose": "Barra de pestañas con más de cuatro pestañas."
+      },
+      {
+        "name": "barbero-stats",
+        "value": "1.5rem",
+        "purpose": "Tres cifras en una tira de 390 px sin partir línea."
+      },
+      {
+        "name": "field-text",
+        "value": "1.125rem",
+        "purpose": "Texto escrito en los campos del ingreso."
+      },
+      {
+        "name": "receipt-ticket-square",
+        "value": "border-top: 3px solid var(--amber); border-radius: 0",
+        "purpose": "La boleta pública es la misma cuenta ya cobrada; comparte la excepción del panel de la cuenta bajo The Ticket Edge Rule."
+      },
+      {
+        "name": "chat-bubble-corner",
+        "value": "border-radius: 4px 4px 4px 0",
+        "purpose": "Esquina inferior izquierda recta de la burbuja de vista previa."
+      },
+      {
+        "name": "void-stamp-size",
+        "value": "0.875rem, letter-spacing 0.14em",
+        "purpose": "El sello ANULADA comparte gramática con META pero se lee en la fila del total, a mayor tamaño."
+      },
+      {
+        "name": "level-bar-sm-radius",
+        "value": "border-radius: 2px",
+        "purpose": "La barra de nivel pequeña (8 px de alto) usa la mitad del radio de 4 px para conservar la silueta del vaso."
+      },
+      {
+        "name": "level-bar-bubbles",
+        "value": "radial-gradient(circle, rgb(255 255 255 / 0.45) 1px, transparent 1.6px) 0 0 / 11px 8px",
+        "purpose": "Trama quieta de burbujas solo en la barra de nivel mediana."
+      },
+      {
+        "name": "meta-inline",
+        "value": "0.75rem, letter-spacing 0.12em, padding 1px 6px, rotate(8deg) translateY(-3px)",
+        "purpose": "Sello META en línea delante del avance de un bono cumplido; estático."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón Cobrar",
+      "kind": "button",
+      "refersTo": "button-charge",
+      "description": "Acción principal roja de ancho completo con labio duro inferior; cobra o entra. Desactivada: relleno labio rojo, labio rojo hondo.",
+      "html": "<button class=\"ds-charge\"><span class=\"ds-charge-fig\">Cobrar $ 50.000</span><small class=\"ds-charge-note\">Elegir pago</small></button>",
+      "css": ".ds-charge { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 64px; padding: 0 16px; border: 0; border-radius: 4px; background: var(--red, #d8121f); color: #fff; box-shadow: 0 3px 0 var(--red-lip, #7e0a12); cursor: pointer; transition: background-color 150ms, transform 150ms, box-shadow 150ms; } .ds-charge-fig { font-family: 'Big Shoulders Display', 'Arial Narrow', sans-serif; font-weight: 900; font-size: 1.75rem; line-height: 1; text-transform: uppercase; letter-spacing: 0.01em; } .ds-charge:hover { background: var(--red-hover, #e8222f); } .ds-charge:active { transform: translateY(3px); box-shadow: 0 0 0 var(--red-lip, #7e0a12); } .ds-charge:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-charge-note { font: 700 0.75rem 'Chakra Petch', system-ui, sans-serif; } .ds-charge:disabled { background: var(--red-lip, #7e0a12); color: var(--foam-dim, #a8977f); box-shadow: 0 3px 0 var(--red-lip-deep, #3d0509); cursor: not-allowed; }"
+    },
+    {
+      "name": "Ítem del catálogo",
+      "kind": "button",
+      "refersTo": "catalog-item",
+      "description": "Botón de madera con nombre y precio; se rellena de azul al tocarlo.",
+      "html": "<button class=\"ds-item\"><span class=\"ds-item-name\">Corte</span><span class=\"ds-item-price\">20.000</span></button>",
+      "css": ".ds-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 48px; width: 180px; padding: 8px 12px; border: 1px solid var(--line, #3a2a1c); border-radius: 4px; background: var(--wood, #1a120b); color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; text-align: left; cursor: pointer; transition: background-color 150ms, border-color 150ms, transform 150ms; } .ds-item-name { font-weight: 700; font-size: 0.875rem; line-height: 1.2; } .ds-item-price { font-family: 'Big Shoulders Display', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 1.25rem; line-height: 1; color: var(--foam-dim, #a8977f); } .ds-item:hover { background: var(--wood-raised, #23180e); border-color: var(--line-strong, #5a4330); } .ds-item:active { transform: scale(0.97); background: var(--blue, #2a4fb5); border-color: var(--blue, #2a4fb5); } .ds-item:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Pestañas del catálogo",
+      "kind": "chip",
+      "refersTo": "catalog-tab",
+      "description": "Pestañas de 36 px con filete; la seleccionada se rellena de espuma.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab\" aria-selected=\"true\">Servicios</button><button class=\"ds-tab\">Bebidas</button><button class=\"ds-tab\">Productos</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 6px; } .ds-tab { height: 36px; padding: 0 12px; border: 1px solid var(--line, #3a2a1c); border-radius: 4px; background: none; color: var(--foam-dim, #a8977f); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, color 150ms; } .ds-tab:hover { color: var(--foam, #f7ecd2); border-color: var(--line-strong, #5a4330); } .ds-tab[aria-selected='true'] { background: var(--foam, #f7ecd2); border-color: var(--foam, #f7ecd2); color: var(--bg, #0c0906); } .ds-tab:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo de madera de 52 px con rótulo; foco ámbar.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Usuario o correo</span><input class=\"ds-input\" placeholder=\"kike\" /></label>",
+      "css": ".ds-field { display: grid; gap: 6px; width: 280px; } .ds-field-label { font: 700 0.75rem 'Chakra Petch', system-ui, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--foam-dim, #a8977f); } .ds-input { height: 52px; padding: 0 14px; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: var(--wood, #1a120b); color: var(--foam, #f7ecd2); font: 500 1.125rem 'Chakra Petch', system-ui, sans-serif; caret-color: var(--amber, #f2a20c); transition: border-color 150ms; } .ds-input::placeholder { color: var(--foam-faint, #8c7c67); } .ds-input:hover { border-color: var(--foam-faint, #8c7c67); } .ds-input:focus-visible { outline: none; border-color: var(--amber, #f2a20c); box-shadow: 0 0 0 1px var(--amber, #f2a20c); }"
+    },
+    {
+      "name": "Barra de pestañas",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Navegación inferior fija; la activa en espuma con marca ámbar interior de 3 px.",
+      "html": "<nav class=\"ds-tabbar\"><a class=\"ds-tabbar-link\" aria-current=\"page\" href=\"#\">Caja</a><a class=\"ds-tabbar-link\" href=\"#\">Hoy</a><a class=\"ds-tabbar-link\" href=\"#\">Cierre</a></nav>",
+      "css": ".ds-tabbar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 360px; background: var(--bg, #0c0906); border-top: 1px solid var(--line, #3a2a1c); } .ds-tabbar-link { display: grid; place-items: center; height: 56px; font: 700 0.75rem 'Chakra Petch', system-ui, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--foam-dim, #a8977f); transition: color 150ms; } .ds-tabbar-link:hover { color: var(--foam, #f7ecd2); } .ds-tabbar-link[aria-current='page'] { color: var(--foam, #f7ecd2); box-shadow: inset 0 3px 0 var(--amber, #f2a20c); } .ds-tabbar-link:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: -2px; }"
+    },
+    {
+      "name": "Cuenta del cliente",
+      "kind": "card",
+      "refersTo": "bill-panel",
+      "description": "Panel tipo ticket: madera, esquinas rectas, único panel con borde superior ámbar de 3 px.",
+      "html": "<section class=\"ds-bill\"><h2 class=\"ds-bill-head\"><span>Cuenta</span><span class=\"ds-bill-meta\">2 ítems</span></h2><ul class=\"ds-bill-list\"><li class=\"ds-bill-line\"><span class=\"ds-bill-what\">Corte <em>Kike</em></span><span class=\"ds-bill-fig\">20.000</span></li><li class=\"ds-bill-line\"><span class=\"ds-bill-what\">Cerveza</span><span class=\"ds-bill-fig\">6.000</span></li></ul></section>",
+      "css": ".ds-bill { width: 340px; padding: 10px 12px 12px; background: var(--wood, #1a120b); border: 1px solid var(--line, #3a2a1c); border-top: 3px solid var(--amber, #f2a20c); border-radius: 0; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-bill-head { display: flex; justify-content: space-between; margin: 0 0 6px; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.08em; text-transform: uppercase; } .ds-bill-meta { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--foam-dim, #a8977f); } .ds-bill-list { list-style: none; margin: 0; padding: 0; } .ds-bill-line { display: flex; align-items: center; gap: 8px; min-height: 40px; border-bottom: 1px dashed var(--line, #3a2a1c); } .ds-bill-line:last-child { border-bottom: 0; } .ds-bill-what { flex: 1; font-size: 0.875rem; } .ds-bill-what em { font-style: normal; font-size: 0.75rem; color: var(--foam-dim, #a8977f); margin-left: 6px; } .ds-bill-fig { font-family: 'Big Shoulders Display', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 1.25rem; line-height: 1; }"
+    },
+    {
+      "name": "Selector de pago",
+      "kind": "custom",
+      "refersTo": "pay-method",
+      "description": "Métodos en rejilla 2 × 2 (el elegido relleno azul) y montos rápidos en columnas iguales de 48 px.",
+      "html": "<div class=\"ds-pay\"><div class=\"ds-modes\" role=\"radiogroup\"><button role=\"radio\" aria-checked=\"true\">Efectivo</button><button role=\"radio\" aria-checked=\"false\">Transferencia</button><button role=\"radio\" aria-checked=\"false\">Tarjeta</button><button role=\"radio\" aria-checked=\"false\">Mixto</button></div><div class=\"ds-quick\"><button>Exacto</button><button>50.000</button><button>60.000</button><button>100.000</button></div></div>",
+      "css": ".ds-pay { display: grid; gap: 12px; width: 340px; font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; } .ds-modes button { min-height: 48px; padding: 0 4px; border: 1px solid var(--line, #3a2a1c); border-radius: 4px; background: var(--wood, #1a120b); color: var(--foam-dim, #a8977f); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, color 150ms, border-color 150ms; } .ds-modes button:hover { color: var(--foam, #f7ecd2); border-color: var(--line-strong, #5a4330); } .ds-modes button[aria-checked='true'] { background: var(--blue, #2a4fb5); border-color: var(--blue, #2a4fb5); color: #fff; } .ds-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .ds-quick button { height: 48px; padding: 0 4px; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: none; color: var(--foam-dim, #a8977f); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: color 150ms, border-color 150ms, background-color 150ms; } .ds-quick button:hover { color: var(--foam, #f7ecd2); border-color: var(--foam-faint, #8c7c67); background: var(--wood, #1a120b); } .ds-modes button:focus-visible, .ds-quick button:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Pendiente discontinuo",
+      "kind": "custom",
+      "refersTo": "queue-banner",
+      "description": "Lo no asentado lleva contorno discontinuo: aviso de cola en ámbar profundo y ficha de cuenta en espera en filete fuerte.",
+      "html": "<div class=\"ds-pend\"><a class=\"ds-queue\" href=\"#\">1 cuenta por enviar · sin conexión</a><button class=\"ds-held\"><span class=\"ds-held-who\">Kike</span><span class=\"ds-held-sub\">Corte +1 · 11:04</span><b class=\"ds-held-fig\">26.000</b></button></div>",
+      "css": ".ds-pend { display: grid; gap: 10px; width: 340px; font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-queue { display: block; padding: 8px 12px; border: 1px dashed var(--amber-deep, #c97806); border-radius: 4px; color: var(--amber, #f2a20c); font-weight: 700; font-size: 0.875rem; text-decoration: none; } .ds-queue:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-held { justify-self: start; display: grid; gap: 2px; min-height: 48px; padding: 6px 12px; border: 1px dashed var(--line-strong, #5a4330); border-radius: 4px; background: none; color: var(--foam, #f7ecd2); text-align: left; cursor: pointer; transition: border-color 150ms, background-color 150ms; } .ds-held:hover { border-color: var(--foam-faint, #8c7c67); background: var(--wood, #1a120b); } .ds-held:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-held-who { font-weight: 700; font-size: 0.875rem; } .ds-held-sub { font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-held-fig { font-family: 'Big Shoulders Display', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 1.25rem; line-height: 1; }"
+    },
+    {
+      "name": "Jarra con sello META",
+      "kind": "custom",
+      "refersTo": "meta-stamp",
+      "description": "La firma: jarra cromada llena hasta la meta, espuma rebosando y sello META rojo.",
+      "html": "<div class=\"ds-tile\"><span class=\"ds-meta\">META</span><span class=\"ds-mug\"><span class=\"ds-glass\"><span class=\"ds-beer\"></span></span><span class=\"ds-handle\"></span></span><span class=\"ds-tile-name\">Dago</span><span class=\"ds-tile-count\">8<span class=\"ds-tile-of\">/8</span></span></div>",
+      "css": ".ds-tile { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 2px; width: 72px; padding: 10px 0 6px; border-radius: 4px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-meta { position: absolute; z-index: 2; top: -4px; right: -2px; padding: 1px 5px; font: 700 10px/1.4 'Chakra Petch', system-ui, sans-serif; letter-spacing: 0.12em; color: #fff; background: var(--red, #d8121f); transform: rotate(8deg); } .ds-mug { position: relative; display: block; width: 53px; height: 60px; margin-bottom: 6px; transform: translateX(-5px); } .ds-glass { position: absolute; left: 0; top: 0; width: 40px; height: 60px; border: 2px solid var(--chrome, #e8eaed); border-top: 0; border-radius: 0 0 6px 6px; background: linear-gradient(90deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02) 40%, rgb(255 255 255 / 0.06)); } .ds-handle { position: absolute; left: 38px; top: 12px; width: 12px; height: 28px; border: 2px solid var(--chrome, #e8eaed); border-left: 0; border-radius: 0 8px 8px 0; } .ds-beer { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; border-radius: 0 0 5px 5px; background: linear-gradient(var(--amber-light, #f7b52c), var(--amber-deep, #c97806)); } .ds-beer::before { content: ''; position: absolute; left: -4px; right: -4px; top: -10px; height: 12px; background: var(--foam, #f7ecd2); border-radius: 8px; } .ds-tile-name { font-weight: 700; font-size: 0.75rem; } .ds-tile-count { font-family: 'Big Shoulders Display', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 1.25rem; line-height: 1; } .ds-tile-of { font-size: 0.875rem; color: var(--foam-dim, #a8977f); }"
+    },
+    {
+      "name": "Placa BAR BEER",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "La hoja del logo: negro, rojo con jarra, azul, borde cromo, inclinada -14°.",
+      "html": "<span class=\"ds-plate\"><span class=\"ds-plate-k\"><i>BAR</i></span><span class=\"ds-plate-r\"><svg viewBox=\"0 0 14 16\" aria-hidden=\"true\"><path d=\"M1 3a2 2 0 0 1 3-1.6A2.4 2.4 0 0 1 8 1.2 2 2 0 0 1 11 3v1h1.2A1.8 1.8 0 0 1 14 5.8v4.4a1.8 1.8 0 0 1-1.8 1.8H11v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1zm10 3v4h1V6z\"/></svg></span><span class=\"ds-plate-b\"><i>BEER</i></span></span>",
+      "css": ".ds-plate { display: inline-flex; transform: skewX(-14deg); border: 2px solid var(--chrome, #e8eaed); box-shadow: 0 2px 0 #000, 0 6px 14px rgb(0 0 0 / 0.6); } .ds-plate > span { display: flex; align-items: center; height: 26px; padding: 0 9px; font: 700 15px/1 'Chakra Petch', system-ui, sans-serif; letter-spacing: 0.16em; color: #fff; } .ds-plate i { font-style: normal; transform: skewX(14deg); } .ds-plate-k { background: #000; } .ds-plate-r { background: var(--red, #d8121f); padding: 0 7px !important; } .ds-plate-b { background: var(--blue, #2a4fb5); } .ds-plate svg { width: 14px; height: 16px; fill: #fff; transform: skewX(14deg); }"
+    },
+    {
+      "name": "Envío de boleta",
+      "kind": "custom",
+      "refersTo": "button-foam",
+      "description": "Destinatario con Cambiar, botón espuma con icono de chat, nota de apertura, enlace a la boleta y Nueva cuenta en contorno espuma.",
+      "html": "<div class=\"ds-send\"><p class=\"ds-send-to\"><span>Para <b>Andrés Pérez</b> · 300 555 0147</span><button class=\"ds-send-link\">Cambiar</button></p><a class=\"ds-send-wa\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 20l1.4-4A8 8 0 1 1 8.6 19z\"/><path d=\"M9 10h6M9 13.5h4\"/></svg><span>Enviar boleta por WhatsApp</span></a><p class=\"ds-send-ok\">Abierta en WhatsApp a las 11:04 a. m. · confirma allá que se envió</p><a class=\"ds-send-view\" href=\"#\">Ver la boleta como la ve el cliente</a><button class=\"ds-send-new\">Nueva cuenta</button></div>",
+      "css": ".ds-send { display: grid; gap: 10px; width: 340px; font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-send-to { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0; font-size: 0.875rem; color: var(--foam-dim, #a8977f); } .ds-send-to b { color: var(--foam, #f7ecd2); } .ds-send-link { height: 40px; padding: 0 4px; border: 0; background: none; color: var(--foam-dim, #a8977f); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; } .ds-send-link:hover { color: var(--foam, #f7ecd2); } .ds-send-wa { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 60px; border-radius: 4px; background: var(--foam, #f7ecd2); color: var(--bg, #0c0906); text-decoration: none; font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: 0.01em; transition: background-color 150ms, transform 150ms; } .ds-send-wa:hover { background: #fff; } .ds-send-wa:active { transform: scale(0.98); } .ds-send-wa svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .ds-send-ok { margin: 0; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-send-view { justify-self: start; font-size: 0.875rem; color: var(--foam-dim, #a8977f); } .ds-send-view:hover { color: var(--foam, #f7ecd2); } .ds-send-new { min-height: 56px; margin-top: 6px; border: 1px solid var(--foam, #f7ecd2); border-radius: 4px; background: none; color: var(--foam, #f7ecd2); font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: 0.01em; cursor: pointer; transition: background-color 150ms, transform 150ms; } .ds-send-new:hover { background: var(--wood-raised, #23180e); } .ds-send-new:active { transform: scale(0.98); } .ds-send-wa:focus-visible, .ds-send-new:focus-visible, .ds-send-link:focus-visible, .ds-send-view:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Casilla",
+      "kind": "input",
+      "refersTo": "checkbox",
+      "description": "Casilla de 24 px en madera; marcada, relleno ámbar con visto en tinta ámbar. Fila de al menos 48 px.",
+      "html": "<label class=\"ds-check\"><input type=\"checkbox\" checked /><span>Acepta recibir promociones por WhatsApp<small>Ya lo había aceptado</small></span></label>",
+      "css": ".ds-check { display: flex; align-items: center; gap: 10px; min-height: 48px; width: 340px; color: var(--foam, #f7ecd2); font: 500 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; } .ds-check span { display: grid; gap: 2px; } .ds-check small { font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-check input { appearance: none; flex: none; display: grid; place-items: center; width: 24px; height: 24px; margin: 0; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: var(--wood, #1a120b); transition: background-color 150ms, border-color 150ms; } .ds-check input::after { content: ''; width: 12px; height: 7px; border-left: 2.5px solid var(--amber-ink, #1c1203); border-bottom: 2.5px solid var(--amber-ink, #1c1203); transform: translateY(-2px) rotate(-45deg) scale(0); transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-check input:checked { background: var(--amber, #f2a20c); border-color: var(--amber, #f2a20c); } .ds-check input:checked::after { transform: translateY(-2px) rotate(-45deg) scale(1); } .ds-check input:hover { border-color: var(--foam-faint, #8c7c67); } .ds-check input:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Boleta pública con sello ANULADA",
+      "kind": "card",
+      "refersTo": "receipt-ticket",
+      "description": "La cuenta ya cobrada: hoja con borde ámbar, perforaciones discontinuas, total en Big Shoulders y sello ANULADA de la familia META.",
+      "html": "<article class=\"ds-rcpt\"><header class=\"ds-rcpt-head\"><h1>Boleta N.º 0022</h1><p>Bar Beer · 10 de noviembre de 2026 · 10:59 p. m.</p></header><ul class=\"ds-rcpt-list\"><li><span class=\"ds-rcpt-what\">Corte<em>Te atendió Mono</em></span><span class=\"ds-rcpt-fig\">20.000</span></li></ul><p class=\"ds-rcpt-total\"><span class=\"ds-rcpt-label\">Total</span><span class=\"ds-stamp\">ANULADA</span><span class=\"ds-rcpt-sum\">$ 20.000</span></p><p class=\"ds-rcpt-paid\">Pagado con transferencia</p></article>",
+      "css": ".ds-rcpt { width: 340px; padding: 18px 16px 16px; background: var(--wood, #1a120b); border: 1px solid var(--line, #3a2a1c); border-top: 3px solid var(--amber, #f2a20c); border-radius: 0; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-rcpt-head { padding-bottom: 12px; border-bottom: 1px dashed var(--line-strong, #5a4330); } .ds-rcpt-head h1 { margin: 0; font: 800 1.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: 0.01em; } .ds-rcpt-head p { margin: 4px 0 0; font-size: 0.875rem; color: var(--foam-dim, #a8977f); } .ds-rcpt-list { list-style: none; margin: 0; padding: 0; } .ds-rcpt-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; padding: 6px 0; border-bottom: 1px dashed var(--line, #3a2a1c); } .ds-rcpt-what { display: grid; gap: 2px; } .ds-rcpt-what em { font-style: normal; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-rcpt-fig, .ds-rcpt-sum { font-family: 'Big Shoulders Display', 'Arial Narrow', sans-serif; font-weight: 800; font-size: 1.25rem; line-height: 1; text-decoration: line-through; color: var(--foam-dim, #a8977f); } .ds-rcpt-total { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 0 0; } .ds-rcpt-label { font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--foam-dim, #a8977f); } .ds-rcpt-sum { font-size: 2.5rem; font-weight: 900; } .ds-stamp { margin-right: auto; margin-left: 12px; padding: 2px 8px; background: var(--red, #d8121f); color: #fff; font: 700 0.875rem/1.4 'Chakra Petch', system-ui, sans-serif; letter-spacing: 0.14em; transform: rotate(8deg); } .ds-rcpt-paid { margin: 4px 0 0; text-align: right; font-size: 0.875rem; color: var(--foam-dim, #a8977f); }"
+    },
+    {
+      "name": "Editor de plantilla",
+      "kind": "custom",
+      "refersTo": "chat-bubble",
+      "description": "Fichas de dato en dos columnas (token y ayuda) y vista previa como burbuja de chat en madera alzada con esquina inferior izquierda recta.",
+      "html": "<div class=\"ds-tpl\"><div class=\"ds-chips\"><button><b>{cliente}</b><span>Nombre del cliente</span></button><button><b>{total}</b><span>Total pagado</span></button></div><pre class=\"ds-bubble\">Hola Andrés, gracias por venir a Bar Beer.\nBoleta N.º 0147 · Total $ 42.000</pre></div>",
+      "css": ".ds-tpl { display: grid; gap: 14px; width: 340px; font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; } .ds-chips button { display: grid; gap: 2px; min-height: 48px; padding: 6px 10px; text-align: left; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: none; color: var(--foam, #f7ecd2); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, border-color 150ms; } .ds-chips span { font-size: 0.75rem; font-weight: 500; line-height: 1.25; color: var(--foam-dim, #a8977f); } .ds-chips button:hover { background: var(--wood, #1a120b); border-color: var(--foam-faint, #8c7c67); } .ds-chips button:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-bubble { margin: 0; padding: 12px 14px; border: 1px solid var(--line, #3a2a1c); border-radius: 4px 4px 4px 0; background: var(--wood-raised, #23180e); color: var(--foam, #f7ecd2); font: 500 0.875rem/1.5 'Chakra Petch', system-ui, sans-serif; white-space: pre-wrap; word-break: break-word; }"
+    },
+    {
+      "name": "Panel de bono con barra de nivel",
+      "kind": "card",
+      "refersTo": "bonus-panel",
+      "description": "Panel de madera de un bono: nombre y periodo, línea de avance 'Vas X de Y', barra de nivel mediana (la jarra acostada) y pie con premio y Faltan/Cumplida; META en línea al cumplirse.",
+      "html": "<div class=\"ds-goals\"><article class=\"ds-goal\"><div class=\"ds-goal-top\"><span class=\"ds-goal-name\">Semana fuerte</span><span class=\"ds-goal-when\">Esta semana · 9 de nov – 15 de nov</span></div><p class=\"ds-goal-prog\">Vas 11 cortes <span class=\"ds-goal-of\">de 40 cortes</span></p><span class=\"ds-lvl\"><span class=\"ds-lvl-glass\"><span class=\"ds-lvl-beer\" style=\"width:27.5%\"></span></span></span><p class=\"ds-goal-foot\"><span><b>$ 50.000</b> de premio</span><span>Faltan 29 cortes</span></p></article><article class=\"ds-goal ds-done\"><div class=\"ds-goal-top\"><span class=\"ds-goal-name\">Día de 5</span><span class=\"ds-goal-when\">Hoy</span></div><p class=\"ds-goal-prog\"><span class=\"ds-goal-stamp\">META</span>Vas 5 cortes <span class=\"ds-goal-of\">de 5 cortes</span></p><span class=\"ds-lvl\"><span class=\"ds-lvl-glass\"><span class=\"ds-lvl-beer\" style=\"width:100%\"></span></span><span class=\"ds-lvl-spill\"></span></span><p class=\"ds-goal-foot\"><span><b>$ 10.000</b> de premio</span><span class=\"ds-ok\">Cumplida</span></p></article></div>",
+      "css": ".ds-goals { display: grid; gap: 10px; width: 340px; } .ds-goal { display: grid; gap: 8px; padding: 14px; background: var(--wood, #1a120b); border: 1px solid var(--line, #3a2a1c); border-radius: 4px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-goal-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; } .ds-goal-name { font-weight: 700; font-size: 0.875rem; } .ds-goal-when { font-size: 0.75rem; color: var(--foam-dim, #a8977f); text-align: right; } .ds-goal-prog { margin: 0; font: 800 1.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: 0.01em; } .ds-done .ds-goal-prog { color: var(--amber, #f2a20c); } .ds-goal-of { display: inline-block; font-size: 1.25rem; color: var(--foam-dim, #a8977f); white-space: nowrap; } .ds-goal-stamp { display: inline-block; margin-right: 8px; padding: 1px 6px; background: var(--red, #d8121f); color: #fff; font: 700 0.75rem/1.4 'Chakra Petch', system-ui, sans-serif; letter-spacing: 0.12em; transform: rotate(8deg) translateY(-3px); } .ds-goal-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin: 0; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-goal-foot b { font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; color: var(--amber, #f2a20c); margin-right: 2px; } .ds-goal-foot > span:last-child { white-space: nowrap; } .ds-ok { color: var(--amber, #f2a20c); font-weight: 700; } .ds-lvl { position: relative; display: block; height: 16px; } .ds-lvl-glass { position: absolute; inset: 0; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: var(--bg, #0c0906); overflow: hidden; } .ds-lvl-beer { position: absolute; inset: 0 auto 0 0; background: radial-gradient(circle, rgb(255 255 255 / 0.45) 1px, transparent 1.6px) 0 0 / 11px 8px, linear-gradient(var(--amber-light, #f7b52c), var(--amber-deep, #c97806)); transition: width 450ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-lvl-beer::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 10px; background: var(--foam, #f7ecd2); border-radius: 0 8px 8px 0; } .ds-lvl-spill { position: absolute; top: -3px; bottom: -3px; right: -6px; width: 16px; background: var(--foam, #f7ecd2); border-radius: 11px; } "
+    },
+    {
+      "name": "Historial: pestañas de periodo y filas",
+      "kind": "custom",
+      "refersTo": "history-row",
+      "description": "Pestañas Semana/Mes/Todo de 48 px (la elegida en espuma), tira de totales en 900 y filas de cuatro columnas con barra de nivel pequeña; el conteo de un día con meta va en ámbar.",
+      "html": "<div class=\"ds-hist\"><div class=\"ds-seg\" role=\"tablist\"><button role=\"tab\" aria-selected=\"true\">Semana</button><button role=\"tab\" aria-selected=\"false\">Mes</button><button role=\"tab\" aria-selected=\"false\">Todo</button></div><dl class=\"ds-sum\"><div><dt>Cortes</dt><dd>2.641</dd></div><div><dt>Ganado</dt><dd class=\"ds-earn\">$ 32.058.000</dd></div><div><dt>Días</dt><dd>395</dd></div></dl><ul class=\"ds-rows\"><li><span class=\"ds-when\">Mar 10 nov<small>9 servicios</small></span><span class=\"ds-sbar\"><span class=\"ds-sglass\"><span class=\"ds-sbeer\" style=\"width:100%\"></span></span><span class=\"ds-sspill\"></span></span><span class=\"ds-n ds-met\">8</span><span class=\"ds-n\">92.000</span></li><li><span class=\"ds-when\">Lun 9 nov<small>6 servicios</small></span><span class=\"ds-sbar\"><span class=\"ds-sglass\"><span class=\"ds-sbeer\" style=\"width:62%\"></span></span></span><span class=\"ds-n\">5</span><span class=\"ds-n\">61.000</span></li></ul><p class=\"ds-legend\">La barra es tu jarra del día: llena = 8 cortes.</p></div>",
+      "css": ".ds-hist { width: 340px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 16px; } .ds-seg button { height: 48px; border: 1px solid var(--line, #3a2a1c); border-radius: 4px; background: none; color: var(--foam-dim, #a8977f); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, color 150ms; } .ds-seg button:hover { color: var(--foam, #f7ecd2); border-color: var(--line-strong, #5a4330); } .ds-seg button[aria-selected='true'] { background: var(--foam, #f7ecd2); border-color: var(--foam, #f7ecd2); color: var(--bg, #0c0906); } .ds-seg button:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-sum { display: grid; grid-template-columns: 0.8fr 1.4fr 0.6fr; gap: 12px; margin: 0; padding: 12px 0; border-top: 1px solid var(--line, #3a2a1c); border-bottom: 1px solid var(--line, #3a2a1c); } .ds-sum dt { font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--foam-dim, #a8977f); } .ds-sum dd { margin: 2px 0 0; font: 900 1.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; white-space: nowrap; } .ds-earn { color: var(--amber, #f2a20c); } .ds-rows { list-style: none; margin: 8px 0 0; padding: 0; } .ds-rows li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(3.5rem, 7rem) 2.6rem 5.5rem; align-items: center; gap: 10px; min-height: 52px; border-bottom: 1px solid var(--line, #3a2a1c); } .ds-when { display: grid; font-weight: 700; font-size: 0.875rem; } .ds-when small { font-weight: 500; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-n { font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-align: right; } .ds-met { color: var(--amber, #f2a20c); } .ds-sbar { position: relative; display: block; height: 8px; } .ds-sglass { position: absolute; inset: 0; border: 1px solid var(--line, #3a2a1c); border-radius: 2px; background: var(--bg, #0c0906); overflow: hidden; } .ds-sbeer { position: absolute; inset: 0 auto 0 0; background: linear-gradient(var(--amber-light, #f7b52c), var(--amber-deep, #c97806)); } .ds-sbeer::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 5px; background: var(--foam, #f7ecd2); border-radius: 0 4px 4px 0; } .ds-sspill { position: absolute; top: -2px; bottom: -2px; right: -4px; width: 9px; background: var(--foam, #f7ecd2); border-radius: 7px; } .ds-legend { margin: 10px 0 0; font-size: 0.75rem; color: var(--foam-dim, #a8977f); }"
+    },
+    {
+      "name": "Formulario de administración",
+      "kind": "input",
+      "refersTo": "button-form-foam",
+      "description": "Enlace de volver, título, campos de 52 px con rótulo y ayuda, selector con triángulo dibujado, fila de dos columnas, fecha escrita en español, mensaje de estado y una sola acción en espuma.",
+      "html": "<form class=\"ds-wrap ds-form\" onsubmit=\"return false\"><a class=\"ds-back\" href=\"#\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15 6l-6 6 6 6\"/></svg>Equipo</a><h1 class=\"ds-h1\">Toño</h1><label class=\"ds-f\"><span class=\"ds-l\">Nombre o apodo</span><input class=\"ds-in\" value=\"Toño\"/><span class=\"ds-h\">Es el que se ve en la caja y en la boleta.</span></label><div class=\"ds-row2\"><label class=\"ds-f\"><span class=\"ds-l\">Rol</span><select class=\"ds-in\"><option>Barbero</option><option>Caja</option></select></label><label class=\"ds-f\"><span class=\"ds-l\">Ingresó</span><input class=\"ds-in\" type=\"date\" value=\"2026-11-11\"/><span class=\"ds-h\">11 de noviembre de 2026</span></label></div><p class=\"ds-msg\">Guardado.</p><button class=\"ds-b ds-foam\" type=\"submit\">Guardar datos</button></form>",
+      "css": ".ds-form { display: grid; gap: 14px; width: 340px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-back { display: inline-flex; align-items: center; gap: 4px; height: 40px; margin-left: -6px; color: var(--foam-dim, #a8977f); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; text-decoration: none; justify-self: start; } .ds-back:hover { color: var(--foam, #f7ecd2); } .ds-h1 { margin: -10px 0 0; font: 800 2.5rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-f { display: grid; gap: 6px; align-content: start; } .ds-h { font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .ds-msg { margin: 0; min-height: 1.2em; font-size: 0.875rem; } .ds-l { font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--foam-dim, #a8977f); } .ds-in { width: 100%; height: 52px; padding: 0 14px; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: var(--wood, #1a120b); color: var(--foam, #f7ecd2); font: 500 1.125rem/1 'Chakra Petch', system-ui, sans-serif; transition: border-color 150ms; } .ds-in:hover { border-color: var(--foam-faint, #8c7c67); } .ds-in:focus-visible { outline: none; border-color: var(--amber, #f2a20c); box-shadow: 0 0 0 1px var(--amber, #f2a20c); } select.ds-in { appearance: none; padding-right: 40px; background: linear-gradient(45deg, transparent 50%, var(--foam-dim, #a8977f) 50%) right 20px center / 6px 6px no-repeat, linear-gradient(-45deg, transparent 50%, var(--foam-dim, #a8977f) 50%) right 14px center / 6px 6px no-repeat, var(--wood, #1a120b); } .ds-b { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 4px; font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, border-color 150ms; } .ds-b:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-foam { min-height: 56px; border: 0; background: var(--foam, #f7ecd2); color: var(--bg, #0c0906); font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-foam:hover { background: #fff; } .ds-out { border: 1px solid var(--line-strong, #5a4330); background: none; color: var(--foam, #f7ecd2); } .ds-out:hover { background: var(--wood, #1a120b); border-color: var(--foam-faint, #8c7c67); } .ds-dan { border: 1px solid var(--red, #d8121f); background: none; color: var(--danger-text, #ff6b6b); } .ds-dan:hover { background: var(--red, #d8121f); color: #fff; } .ds-wrap svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }"
+    },
+    {
+      "name": "Botones de formulario",
+      "kind": "button",
+      "refersTo": "button-form-outline",
+      "description": "Espuma: la única acción principal del formulario. Contorno: lo secundario. Peligro: solo quitar acceso.",
+      "html": "<div class=\"ds-btns\"><button class=\"ds-b ds-foam\">Guardar</button><div class=\"ds-row2\"><button class=\"ds-b ds-out\">Cambiar PIN</button><button class=\"ds-b ds-dan\">Quitar acceso</button></div></div>",
+      "css": ".ds-btns { display: grid; gap: 10px; width: 340px; } .ds-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .ds-b { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 4px; font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, border-color 150ms; } .ds-b:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-foam { min-height: 56px; border: 0; background: var(--foam, #f7ecd2); color: var(--bg, #0c0906); font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-foam:hover { background: #fff; } .ds-out { border: 1px solid var(--line-strong, #5a4330); background: none; color: var(--foam, #f7ecd2); } .ds-out:hover { background: var(--wood, #1a120b); border-color: var(--foam-faint, #8c7c67); } .ds-dan { border: 1px solid var(--red, #d8121f); background: none; color: var(--danger-text, #ff6b6b); } .ds-dan:hover { background: var(--red, #d8121f); color: #fff; }"
+    },
+    {
+      "name": "Confirmación en línea",
+      "kind": "custom",
+      "refersTo": "confirm-box",
+      "description": "Recuadro de 1 px rojo del logo que reemplaza al par de botones; sin modal. Solo para lo que destruye o quita; el dinero irreversible usa la confirmación neutra.",
+      "html": "<div class=\"ds-confirm\" role=\"alertdialog\"><p>¿Quitar el acceso a Mono? No podrá entrar hasta que le des uno nuevo. Su historial se conserva.</p><div class=\"ds-row2\"><button class=\"ds-b ds-out\">Cancelar</button><button class=\"ds-b ds-dan\">Sí, quitar acceso</button></div></div>",
+      "css": ".ds-confirm { display: grid; gap: 10px; width: 340px; padding: 12px; border: 1px solid var(--red, #d8121f); border-radius: 4px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-confirm p { margin: 0; font-size: 0.875rem; line-height: 1.4; } .ds-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .ds-b { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 4px; font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, border-color 150ms; } .ds-b:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-foam { min-height: 56px; border: 0; background: var(--foam, #f7ecd2); color: var(--bg, #0c0906); font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-foam:hover { background: #fff; } .ds-out { border: 1px solid var(--line-strong, #5a4330); background: none; color: var(--foam, #f7ecd2); } .ds-out:hover { background: var(--wood, #1a120b); border-color: var(--foam-faint, #8c7c67); } .ds-dan { border: 1px solid var(--red, #d8121f); background: none; color: var(--danger-text, #ff6b6b); } .ds-dan:hover { background: var(--red, #d8121f); color: #fff; }"
+    },
+    {
+      "name": "Filas de administración",
+      "kind": "custom",
+      "refersTo": "admin-row",
+      "description": "Nombre y subetiqueta a la izquierda, valor a la derecha, chevrón de trazo. Lo oculto o inactivo se apaga y se tacha.",
+      "html": "<ul class=\"ds-wrap ds-rows\"><li><a href=\"#\"><span class=\"ds-n\">Corte<small>Comisión 50% · cuenta como corte</small></span><span class=\"ds-p\">20.000</span><svg class=\"ds-go\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg></a></li><li class=\"ds-off\"><a href=\"#\"><span class=\"ds-n\">Gorra<small>Oculto en la caja</small></span><span class=\"ds-p\">40.000</span><svg class=\"ds-go\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg></a></li></ul>",
+      "css": ".ds-rows { list-style: none; margin: 0; padding: 0; width: 340px; border-top: 1px solid var(--line, #3a2a1c); color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-rows li { border-bottom: 1px solid var(--line, #3a2a1c); } .ds-rows a { display: grid; grid-template-columns: 1fr auto 20px; align-items: center; gap: 10px; min-height: 58px; padding: 6px 0; color: inherit; text-decoration: none; } .ds-rows a:hover .ds-n { color: #fff; } .ds-rows a:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-n { display: grid; font-weight: 700; font-size: 0.875rem; } .ds-n small { font-weight: 500; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-p { font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; } .ds-go { color: var(--foam-dim, #a8977f); } .ds-off .ds-n, .ds-off .ds-p { color: var(--foam-dim, #a8977f); } .ds-off .ds-p { text-decoration: line-through; } .ds-wrap svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }"
+    },
+    {
+      "name": "Selector de valor",
+      "kind": "chip",
+      "refersTo": "value-chooser",
+      "description": "Grupo de radio global con relleno azul para un dato que se guarda (pestaña de la caja de un ítem; Cada, Se mide por y Premio de un bono); las pestañas que navegan se rellenan de espuma.",
+      "html": "<div class=\"ds-vc\"><span class=\"ds-l\" id=\"ds-k\">Pestaña de la caja</span><div class=\"ds-seg\" role=\"radiogroup\" aria-labelledby=\"ds-k\"><button role=\"radio\" aria-checked=\"false\">Servicios</button><button role=\"radio\" aria-checked=\"false\">Bebidas</button><button role=\"radio\" aria-checked=\"true\">Productos</button></div></div>",
+      "css": ".ds-vc { display: grid; gap: 6px; width: 340px; font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-l { font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--foam-dim, #a8977f); } .ds-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .ds-seg button { height: 48px; border: 1px solid var(--line, #3a2a1c); border-radius: 4px; background: var(--wood, #1a120b); color: var(--foam-dim, #a8977f); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, color 150ms; } .ds-seg button:hover { color: var(--foam, #f7ecd2); border-color: var(--line-strong, #5a4330); } .ds-seg button[aria-checked='true'] { background: var(--blue, #2a4fb5); border-color: var(--blue, #2a4fb5); color: #fff; } .ds-seg button:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Campos de excepción",
+      "kind": "input",
+      "refersTo": "override-field",
+      "description": "Valor heredado como «—», el general en la etiqueta.",
+      "html": "<ul class=\"ds-pcts\"><li><label for=\"ds-p1\">Corte<small>General 50%</small></label><span class=\"ds-pin\"><input id=\"ds-p1\" class=\"ds-in\" placeholder=\"—\"/><span aria-hidden=\"true\">%</span></span></li><li><label for=\"ds-p2\">Barba<small>General 50%</small></label><span class=\"ds-pin\"><input id=\"ds-p2\" class=\"ds-in\" value=\"60\" placeholder=\"—\"/><span aria-hidden=\"true\">%</span></span></li></ul>",
+      "css": ".ds-pcts { list-style: none; margin: 0; padding: 0; width: 340px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-pcts li { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 64px; border-bottom: 1px solid var(--line, #3a2a1c); } .ds-pcts label { display: grid; font-weight: 700; font-size: 0.875rem; } .ds-pcts small { font-weight: 500; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-pin { display: flex; align-items: center; gap: 6px; color: var(--foam-dim, #a8977f); } .ds-pin .ds-in { width: 5.5rem; text-align: right; } .ds-in::placeholder { color: var(--foam-faint, #8c7c67); } .ds-in { width: 100%; height: 52px; padding: 0 14px; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: var(--wood, #1a120b); color: var(--foam, #f7ecd2); font: 500 1.125rem/1 'Chakra Petch', system-ui, sans-serif; transition: border-color 150ms; } .ds-in:hover { border-color: var(--foam-faint, #8c7c67); } .ds-in:focus-visible { outline: none; border-color: var(--amber, #f2a20c); box-shadow: 0 0 0 1px var(--amber, #f2a20c); } select.ds-in { appearance: none; padding-right: 40px; background: linear-gradient(45deg, transparent 50%, var(--foam-dim, #a8977f) 50%) right 20px center / 6px 6px no-repeat, linear-gradient(-45deg, transparent 50%, var(--foam-dim, #a8977f) 50%) right 14px center / 6px 6px no-repeat, var(--wood, #1a120b); }"
+    },
+    {
+      "name": "Confirmación neutra",
+      "kind": "custom",
+      "refersTo": "confirm-box-neutral",
+      "description": "Recuadro de madera con filete fuerte que confirma dinero irreversible no destructivo (cerrar caja, marcar pagado); el Sí va en espuma.",
+      "html": "<div class=\"ds-nconfirm\" role=\"group\"><p>¿Le pagaste $ 745.500 a Mono por la semana del 2 al 8 de nov? Queda registrado y no se puede deshacer.</p><div class=\"ds-row2\"><button class=\"ds-b ds-out\">Cancelar</button><button class=\"ds-b ds-foam\">Sí, pagado</button></div></div>",
+      "css": ".ds-nconfirm { display: grid; gap: 10px; width: 340px; padding: 12px; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: var(--wood, #1a120b); color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-nconfirm p { margin: 0; font-size: 0.875rem; line-height: 1.4; } .ds-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .ds-b { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 4px; font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, border-color 150ms; } .ds-b:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-foam { min-height: 56px; border: 0; background: var(--foam, #f7ecd2); color: var(--bg, #0c0906); font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-foam:hover { background: #fff; } .ds-out { border: 1px solid var(--line-strong, #5a4330); background: none; color: var(--foam, #f7ecd2); } .ds-out:hover { background: var(--wood, #1a120b); border-color: var(--foam-faint, #8c7c67); }"
+    },
+    {
+      "name": "Selector de periodo",
+      "kind": "nav",
+      "refersTo": "period-stepper",
+      "description": "Pestañas de periodo en espuma (navegan) y fila de paso con flechas de 48 px; la siguiente se apaga al 30 % en el periodo en curso.",
+      "html": "<div class=\"ds-rp\"><div class=\"ds-seg\" role=\"tablist\"><button role=\"tab\" aria-selected=\"false\">Día</button><button role=\"tab\" aria-selected=\"true\">Semana</button><button role=\"tab\" aria-selected=\"false\">Mes</button></div><div class=\"ds-step\"><button class=\"ds-arrow\" aria-label=\"Periodo anterior\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15 6l-6 6 6 6\"/></svg></button><p class=\"ds-now\">Semana pasada · 2 de nov – 8 de nov</p><button class=\"ds-arrow\" aria-label=\"Periodo siguiente\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg></button></div><div class=\"ds-step\"><button class=\"ds-arrow\" aria-label=\"Periodo anterior\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M15 6l-6 6 6 6\"/></svg></button><p class=\"ds-now\">Noviembre 2026</p><button class=\"ds-arrow\" aria-label=\"Periodo siguiente\" disabled><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg></button></div></div>",
+      "css": ".ds-rp { display: grid; gap: 6px; width: 340px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .ds-seg button { height: 48px; border: 1px solid var(--line, #3a2a1c); border-radius: 4px; background: none; color: var(--foam-dim, #a8977f); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, color 150ms; } .ds-seg button:hover { color: var(--foam, #f7ecd2); border-color: var(--line-strong, #5a4330); } .ds-seg button[aria-selected='true'] { background: var(--foam, #f7ecd2); border-color: var(--foam, #f7ecd2); color: var(--bg, #0c0906); } .ds-step { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; } .ds-now { margin: 0; text-align: center; font-weight: 700; font-size: 0.875rem; } .ds-arrow { display: grid; place-items: center; height: 48px; border: 0; border-radius: 4px; background: none; color: var(--foam-dim, #a8977f); cursor: pointer; transition: background-color 150ms, color 150ms; } .ds-arrow:hover:not(:disabled) { background: var(--wood, #1a120b); color: var(--foam, #f7ecd2); } .ds-arrow:disabled { opacity: 0.3; cursor: default; } .ds-arrow svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .ds-seg button:focus-visible, .ds-arrow:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Cierre de caja y pagos",
+      "kind": "card",
+      "refersTo": "closing-panel",
+      "description": "Cifra principal de dinero bajo su rótulo, línea de diferencia (Faltan en texto de error), resumen de caja cerrada en madera con filete fuerte y fila de pago en ámbar.",
+      "html": "<div class=\"ds-money\"><div class=\"ds-hero\"><span class=\"ds-l\">Debería haber en efectivo</span><span class=\"ds-big\">$ 379.000</span></div><p class=\"ds-diff ds-short\">Faltan $ 2.000</p><div class=\"ds-closed\"><p class=\"ds-stamp\">Caja cerrada</p><dl><div><dt>Debía haber</dt><dd>$ 379.000</dd></div><div><dt>Contado</dt><dd>$ 377.000</dd></div><div class=\"ds-short\"><dt>Diferencia</dt><dd class=\"ds-up\">Faltan $ 2.000</dd></div></dl><p class=\"ds-note\">“Se dio cambio de más”</p><p class=\"ds-by\">Cerró Luisa · 1:34 a. m.</p></div><div class=\"ds-pay\"><div class=\"ds-top\"><span class=\"ds-n\">Mono<small>60 cortes</small></span><span class=\"ds-tot\">$ 745.500</span></div><p class=\"ds-parts\">Comisión $ 695.500 + bonos $ 50.000</p><button class=\"ds-mark\">Marcar pagado</button></div></div>",
+      "css": ".ds-money { display: grid; gap: 14px; width: 340px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-hero { display: grid; gap: 4px; padding-bottom: 16px; border-bottom: 1px solid var(--line, #3a2a1c); } .ds-l { font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--foam-dim, #a8977f); } .ds-big { font: 900 3.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-diff { margin: 0; text-align: right; font: 800 1.25rem/1.2 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-diff.ds-short, .ds-short dd { color: var(--danger-text, #ff6b6b); } .ds-closed { padding: 16px; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: var(--wood, #1a120b); } .ds-stamp { margin: 0; font: 900 1.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-closed dl { margin: 12px 0 0; } .ds-closed dl div { display: flex; justify-content: space-between; align-items: baseline; min-height: 44px; padding-top: 8px; border-bottom: 1px solid var(--line, #3a2a1c); } .ds-closed dt { font-size: 0.875rem; color: var(--foam-dim, #a8977f); } .ds-closed dd { margin: 0; font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; } .ds-up { text-transform: uppercase; } .ds-note { margin: 12px 0 0; font-size: 0.875rem; } .ds-by { margin: 12px 0 0; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-pay { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid var(--line, #3a2a1c); border-bottom: 1px solid var(--line, #3a2a1c); } .ds-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; } .ds-n { display: grid; font-weight: 700; } .ds-n small { font-weight: 500; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-tot { font: 800 1.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; color: var(--amber, #f2a20c); white-space: nowrap; } .ds-parts { margin: 0; font-size: 0.75rem; color: var(--foam-dim, #a8977f); } .ds-mark { justify-self: start; min-height: 48px; padding: 0 16px; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; background: none; color: var(--foam, #f7ecd2); font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; cursor: pointer; transition: background-color 150ms, border-color 150ms; } .ds-mark:hover { background: var(--wood, #1a120b); border-color: var(--foam-faint, #8c7c67); } .ds-mark:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Aviso sin conexión",
+      "kind": "custom",
+      "refersTo": "offline-note",
+      "description": "Bajo la cabecera de toda pantalla sin red: discontinuo ámbar profundo, texto Name ámbar. En la caja cede al aviso de cola (\"· enviando\" / \"· sin conexión\") cuando hay cuentas por enviar.",
+      "html": "<div class=\"ds-notes\"><p class=\"ds-offline\" role=\"status\">Sin conexión · lo que ves puede estar atrasado y se pone al día solo</p><a class=\"ds-queue\" href=\"#\">2 cuentas por enviar · sin conexión</a><a class=\"ds-queue ds-bad\" href=\"#\">1 cuenta rechazada · revisar</a></div>",
+      "css": ".ds-notes { display: grid; gap: 8px; width: 340px; font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-offline, .ds-queue { display: block; margin: 0; padding: 8px 12px; border: 1px dashed var(--amber-deep, #c97806); border-radius: 4px; color: var(--amber, #f2a20c); font-weight: 700; font-size: 0.875rem; line-height: 1.4; text-decoration: none; } .ds-queue.ds-bad { border-color: var(--danger-text, #ff6b6b); color: var(--danger-text, #ff6b6b); } .ds-queue:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; }"
+    },
+    {
+      "name": "Nota de caja cerrada",
+      "kind": "custom",
+      "refersTo": "closed-note",
+      "description": "Línea quieta bajo \"Hoy en el local\" cuando el cierre de hoy ya se hizo: 0.75rem espuma apagada y filete inferior sólido; lo cerrado está asentado.",
+      "html": "<p class=\"ds-closed-note\">Caja de hoy cerrada a las 11:55 a. m. · el efectivo que cobres ahora queda fuera de ese cierre</p>",
+      "css": ".ds-closed-note { width: 340px; margin: 0; padding: 10px 16px; border-bottom: 1px solid var(--line, #3a2a1c); color: var(--foam-dim, #a8977f); font: 500 0.75rem/1.4 'Chakra Petch', system-ui, sans-serif; }"
+    },
+    {
+      "name": "Primeros pasos",
+      "kind": "card",
+      "refersTo": "first-steps",
+      "description": "Marco discontinuo de filete fuerte para un local nuevo: pasos ordenados de 60 px con cuadro numerado (siguiente en espuma, hecho en ámbar con visto dibujado) y chevrón.",
+      "html": "<section class=\"ds-first\"><h2>Primeros pasos</h2><p class=\"ds-fnote\">Con esto la caja queda lista para cobrar el primer corte.</p><ol><li class=\"ds-done\"><a href=\"#\"><span class=\"ds-n\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"><path d=\"M5 12l5 5 9-10\"/></svg></span><span class=\"ds-t\">Crea a los barberos<small>Hecho</small></span><svg class=\"ds-chev\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg></a></li><li class=\"ds-next\"><a href=\"#\"><span class=\"ds-n\" aria-hidden=\"true\">2</span><span class=\"ds-t\">Arma el catálogo<small>Servicios con su precio y porcentaje, bebidas y productos.</small></span><svg class=\"ds-chev\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg></a></li><li><a href=\"#\"><span class=\"ds-n\" aria-hidden=\"true\">3</span><span class=\"ds-t\">Da los accesos<small>Usuario y PIN para la caja y para cada barbero.</small></span><svg class=\"ds-chev\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg></a></li></ol></section>",
+      "css": ".ds-first { width: 340px; padding: 16px; border: 1px dashed var(--line-strong, #5a4330); border-radius: 4px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-first h2 { margin: 0; font: 800 1.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: 0.01em; } .ds-fnote { margin: 4px 0 8px; font-size: 0.875rem; line-height: 1.4; color: var(--foam-dim, #a8977f); } .ds-first ol { list-style: none; margin: 0; padding: 0; } .ds-first li + li { border-top: 1px solid var(--line, #3a2a1c); } .ds-first a { display: grid; grid-template-columns: 32px 1fr 18px; align-items: center; gap: 12px; min-height: 60px; color: inherit; text-decoration: none; } .ds-first a:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-n { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--line-strong, #5a4330); border-radius: 4px; font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; color: var(--foam-dim, #a8977f); } .ds-next .ds-n { border-color: var(--foam, #f7ecd2); color: var(--foam, #f7ecd2); } .ds-done .ds-n { border-color: var(--amber, #f2a20c); color: var(--amber, #f2a20c); } .ds-n svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; } .ds-t { display: grid; font-weight: 700; font-size: 0.875rem; line-height: 1.2; } .ds-t small { font-weight: 500; font-size: 0.75rem; line-height: 1.4; color: var(--foam-dim, #a8977f); } .ds-done .ds-t { color: var(--foam-dim, #a8977f); } .ds-chev { width: 18px; height: 18px; fill: none; stroke: var(--foam-dim, #a8977f); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .ds-first a:hover .ds-chev { stroke: var(--foam, #f7ecd2); }"
+    },
+    {
+      "name": "Página de error",
+      "kind": "custom",
+      "refersTo": "button-form-foam",
+      "description": "Placa, estado vacío (\"Esta página no existe\" / \"Algo falló\") e \"Ir al inicio\" en espuma de formulario con \"Volver a intentar\" en contorno de formulario.",
+      "html": "<section class=\"ds-err\"><div class=\"ds-empty\"><h2>Algo falló</h2><p>La app tuvo un problema al abrir esta pantalla. Ya quedó anotado. Lo cobrado está a salvo.</p></div><div class=\"ds-acts\"><a class=\"ds-b ds-foam\" href=\"#\">Ir al inicio</a><button class=\"ds-b ds-out\">Volver a intentar</button></div></section>",
+      "css": ".ds-err { display: grid; gap: 20px; width: 340px; color: var(--foam, #f7ecd2); font-family: 'Chakra Petch', system-ui, sans-serif; } .ds-empty { padding: 16px; border: 1px dashed var(--line-strong, #5a4330); border-radius: 4px; } .ds-empty h2 { margin: 0 0 6px; font: 800 1.75rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-empty p { margin: 0; font-size: 0.875rem; line-height: 1.4; color: var(--foam-dim, #a8977f); } .ds-acts { display: grid; gap: 10px; } .ds-b { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 16px; border-radius: 4px; font: 700 0.875rem 'Chakra Petch', system-ui, sans-serif; text-decoration: none; cursor: pointer; transition: background-color 150ms, border-color 150ms; } .ds-b:focus-visible { outline: 2px solid var(--amber, #f2a20c); outline-offset: 2px; } .ds-foam { min-height: 56px; border: 0; background: var(--foam, #f7ecd2); color: var(--bg, #0c0906); font: 800 1.25rem/1 'Big Shoulders Display', 'Arial Narrow', sans-serif; text-transform: uppercase; } .ds-foam:hover { background: #fff; } .ds-out { border: 1px solid var(--line-strong, #5a4330); background: none; color: var(--foam, #f7ecd2); } .ds-out:hover { background: var(--wood, #1a120b); border-color: var(--foam-faint, #8c7c67); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Jarra y cuchilla",
+    "overview": "El nombre del local convertido en instrumento. La app es una barra de bar de noche: suelo negro tostado con vetas de tablón apenas visibles, paneles de madera oscura con filetes marrones de 1 px, texto color espuma. Cada barbero tiene una jarra de cerveza cromada que se llena con los cortes del día hacia su meta. Esa jarra es la firma del sistema y aparece en la caja, en la vista del barbero y en la del administrador.\n\nEl sistema es denso y pensado para operar de pie, con una mano, en un local oscuro y ruidoso. La jerarquía sale del peso y de la caja alta, no de muchos tamaños: tres tamaños de trabajo para el texto y una escala aparte para las cifras. Cada color de acento tiene un solo oficio (ámbar para progreso y para lo que gana el barbero, rojo del logo para cobrar y alertar, azul del logo para seleccionar), y esa disciplina es la que hace legible la pantalla de un vistazo.\n\nRechaza dos cosas: el dashboard oscuro gris con chips redondeados y un único acento neón, y el disfraz metalero de calaveras y llamas. La materia es la barra, la madera, la espuma y el cromo; nada más.",
+    "keyCharacteristics": [
+      "Fondo negro tostado con vetas de tablón horizontales cada 140 px.",
+      "Paneles de madera con filete marrón de 1 px y esquinas de 4 px.",
+      "Cifras en Big Shoulders Display, en caja alta; todo lo escrito en Chakra Petch.",
+      "Ámbar = progreso, lo que gana el barbero y las vueltas; el dinero vendido va en espuma; rojo = cobrar, anular, alertar; azul = selección como relleno; cromo = contorno de las jarras y de la placa BAR BEER.",
+      "Jarra cromada que vierte una vez por sesión y rebosa solo al cruzar la meta.",
+      "La jarra acostada (barra de nivel) para todo progreso que no es la jarra del día: bonos, días y meses del historial.",
+      "Columna móvil; en escritorio, columna centrada de 520 px.",
+      "Administración con un solo vocabulario de formulario: campos de madera de 52 px, una acción en espuma por formulario, confirmación en línea sin modales (roja si destruye, neutra si solo es irreversible)."
+    ],
+    "rules": [
+      {
+        "name": "The One Trade Rule",
+        "body": "Cada acento tiene un oficio y no presta servicio a otro: el ámbar no cobra, el rojo no selecciona, el azul no marca dinero. Si una cifra es dinero o progreso, es ámbar o espuma; nunca azul.",
+        "section": "colors"
+      },
+      {
+        "name": "The Fill-Only Blue Rule",
+        "body": "El azul aparece como relleno de un elemento seleccionado, nunca como texto, borde suelto ni enlace.",
+        "section": "colors"
+      },
+      {
+        "name": "The Chrome Is For Glass Rule",
+        "body": "El cromo contornea las jarras y la placa del logo. No se usa como color de borde de paneles ni de botones.",
+        "section": "colors"
+      },
+      {
+        "name": "The Earned Is Amber Rule",
+        "body": "El ámbar marca lo que gana un barbero (comisión, premios, lo ganado), el progreso y las vueltas a entregar. El dinero vendido (el total del local, los precios del catálogo, lo que gastó un cliente) va en espuma.",
+        "section": "colors"
+      },
+      {
+        "name": "The Rank By Weight Rule",
+        "body": "Tres tamaños de trabajo para texto (0.75, 0.875, 1rem) y cuatro para cifras (1.25, 1.75, 2.5, 3.75rem). El rango sale del peso y de la caja, no de inventar tamaños nuevos.",
+        "section": "typography"
+      },
+      {
+        "name": "The Figures Shout Rule",
+        "body": "Toda cifra que importa (dinero, cortes, metas) va en Big Shoulders Display en caja alta. Lo que se escribe o se lee como nombre va en Chakra Petch.",
+        "section": "typography"
+      },
+      {
+        "name": "The Label Names A Figure Rule",
+        "body": "El rótulo en mayúsculas espaciadas nombra la cifra o el campo que tiene debajo. No se coloca sobre títulos de sección como antetítulo decorativo.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lip Belongs To Red Rule",
+        "body": "El labio duro es parte del botón rojo de acción principal. Ningún otro botón ni panel lleva sombra desplazada; la placa del logo no es un panel.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Ticket Edge Rule",
+        "body": "Entre los paneles, el borde superior ámbar de 3 px pertenece solo a la cuenta del cliente: el panel de la cuenta en la caja y la boleta pública, que es esa misma cuenta ya cobrada. Ninguna otra hoja lo lleva; los estados \"Boleta no encontrada\" y \"Sin conexión\" usan el estado vacío.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Dashed Means Pending Rule",
+        "body": "Un contorno discontinuo de 1 px marca lo que aún no está asentado: la cuenta en espera (filete fuerte), la cuenta guardada por enviar y el aviso \"N cuentas por enviar\" (ámbar profundo, texto ámbar; también en el cierre, donde impide cerrar), el aviso \"Ayer quedó sin cierre\" (ámbar profundo, texto espuma, con \"Cerrar ayer\" en contorno), el aviso \"Sin conexión\" (ámbar profundo, texto ámbar), el estado vacío y el marco de \"Primeros pasos\" (filete fuerte). La nota de caja ya cerrada en la caja es sólida: lo cerrado está asentado. Lo cobrado y enviado lleva contorno sólido o ninguno. Lo rechazado se nombra con texto de error, no con ámbar.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Red Box Destroys Rule",
+        "body": "El recuadro rojo confirma solo lo que destruye o quita (quitar el acceso a alguien). Lo irreversible que no destruye (cerrar la caja, marcar un pago como hecho) se confirma en el recuadro neutro: madera, filete fuerte, \"Cancelar\" en contorno de formulario y el \"Sí, …\" en espuma.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do asignar el ámbar a progreso y dinero, el rojo a cobrar/anular/alertar y el azul a selección como relleno.",
+      "Do escribir cada cifra importante en Big Shoulders Display caja alta, en la escala 1.25 / 1.75 / 2.5 / 3.75rem.",
+      "Do separar bloques con filetes de 1 px a todo lo ancho y usar madera solo para lo que se toca o se arma.",
+      "Do mantener objetivos táctiles de al menos 48 px y el botón de cobro de ancho completo con su labio rojo de 3 px.",
+      "Do usar 150 ms para cambios de estado y 450 ms (cubic-bezier(0.16, 1, 0.3, 1)) para movimientos de nivel, rebose y sello.",
+      "Do reservar el vertido de la jarra para la primera pantalla de la sesión y el rebose y el sello META para el cruce de la meta.",
+      "Do marcar con contorno discontinuo lo que aún no está asentado (en espera, por enviar, vacío) y con texto de error lo rechazado o anulado.",
+      "Do mantener la barra de Cobrar fija sobre la barra de pestañas, con su degradado a negro de barra.",
+      "Do hacer de las vueltas la cifra dominante, en ámbar, cuando hay que entregarlas.",
+      "Do usar un solo relleno espuma por pantalla para la acción que cierra un flujo sin cobrar; la acción que lo acompaña va en contorno espuma.",
+      "Do usar la jarra para los cortes de hoy y la barra de nivel para todo otro progreso, siempre con su escala escrita en una leyenda o en la línea de avance.",
+      "Do dar a cada formulario de administración una sola acción en espuma; lo secundario va en contorno de formulario y el contorno rojo de peligro solo quita acceso.",
+      "Do confirmar lo destructivo en línea, en un recuadro de 1 px rojo del logo con la pregunta, Cancelar y \"Sí, quitar …\".",
+      "Do confirmar el dinero irreversible que no destruye nada (cerrar la caja, marcar un pago) en el recuadro neutro de madera y filete fuerte, con una pregunta que nombra la cifra, a quién y el periodo, y el \"Sí, …\" en espuma.",
+      "Do rellenar de azul el valor elegido en un selector de valor y de espuma la pestaña que navega.",
+      "Do mostrar un valor heredado como \"—\" con el valor general escrito en la etiqueta.",
+      "Do abrir cada subpágina con el enlace de volver al lugar de donde viene, encima del título.",
+      "Do dar a cada pantalla de dinero una sola cifra principal de 3.75rem 900 bajo su rótulo: espuma si es vendido o contado, ámbar si es lo que se debe o se ganó.",
+      "Do escribir lo que falta en la caja en texto de error y lo que cuadra o sobra en espuma.",
+      "Do comparar dinero vendido con la barra plana en espuma apagada, con su escala en la leyenda.",
+      "Do avisar la falta de conexión bajo la cabecera, en discontinuo ámbar profundo; si el aviso de cola ya dice \"sin conexión\", no repetirlo.",
+      "Do seguir con \" · \" la frase que viene tras una hora (\"a las 11:55 a. m. · el efectivo…\"); nunca cerrar una oración justo después de \"a. m.\" o \"p. m.\"."
+    ],
+    "donts": [
+      "Don't convertir la app en un dashboard gris oscuro con chips redondeados y un acento neón.",
+      "Don't recurrir a calaveras, llamas ni a ningún disfraz metalero.",
+      "Don't poner el borde superior ámbar de 3 px en ningún panel que no sea la cuenta del cliente (en la caja o en la boleta pública), ni en los estados vacíos de la boleta.",
+      "Don't dar sombra desplazada a nada que no sea el botón rojo de acción principal (la placa del logo conserva la suya como parte del logo).",
+      "Don't usar el azul como texto ni el rojo del logo como texto pequeño; para errores está el texto de error.",
+      "Don't colocar rótulos en mayúsculas espaciadas encima de títulos de sección como antetítulo.",
+      "Don't dejar burbujas ni otros elementos animándose en reposo; el movimiento acompaña un cambio y se detiene.",
+      "Don't usar contorno discontinuo en algo ya cobrado y enviado.",
+      "Don't abrir modales para confirmar; la confirmación ocupa el lugar de los botones.",
+      "Don't pintar de ámbar el dinero vendido (totales, precios, lo gastado por un cliente); el ámbar es lo que gana el barbero.",
+      "Don't ocultar de una lista de administración lo inactivo u oculto; se apaga y se tacha.",
+      "Don't usar el recuadro rojo para confirmar algo que no destruye (cerrar la caja, marcar un pago); el rojo confirma solo lo que quita.",
+      "Don't servir en cerveza (jarra o barra de nivel) una comparación de dinero vendido; la cerveza es progreso hacia una meta.",
+      "Don't dejar navegar el selector de periodo hacia el futuro; la flecha siguiente se apaga en el periodo en curso.",
+      "Don't usar contorno discontinuo ni ámbar en la nota de caja ya cerrada; lo cerrado está asentado y la nota no pide actuar."
+    ]
+  }
+}
