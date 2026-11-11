@@ -33,7 +33,7 @@
 			receiptNo: 147,
 			createdAt: new Date().toISOString(),
 			lines: [
-				{ name: 'Corte + barba', qty: 1, total: 30000, barber: 'Kike' },
+				{ name: 'Corte + barba', qty: 1, total: 30000, barber: 'Esteban' },
 				{ name: 'Cerveza', qty: 2, total: 12000, barber: null }
 			],
 			total: 42000,

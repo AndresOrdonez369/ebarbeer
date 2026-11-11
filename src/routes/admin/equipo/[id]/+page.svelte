@@ -196,7 +196,7 @@
 			<h2 class="fig heading">Datos</h2>
 			<label class="field">
 				<span class="label">Nombre o apodo</span>
-				<input class="input" bind:value={name} autocomplete="off" autocapitalize="words" placeholder="Kike" />
+				<input class="input" bind:value={name} autocomplete="off" autocapitalize="words" placeholder="Esteban" />
 				<span class="hint">Es el que se ve en la caja y en la boleta.</span>
 			</label>
 			<div class="stack2">

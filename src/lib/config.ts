@@ -7,8 +7,11 @@ export const config = {
 	staffEmailDomain: env.VITE_STAFF_EMAIL_DOMAIN ?? 'staff.barbeer.app'
 };
 
-/** Without Supabase keys the app runs on in-memory example data so it can be shown and designed. */
-export const isDemo = env.VITE_DEMO === '1' || !config.supabaseUrl || !config.supabaseAnonKey;
+/** Example data only when asked for explicitly (`npm run dev:demo`, the automated tests). */
+export const isDemo = env.VITE_DEMO === '1';
+
+/** The published app must point at Supabase; without it, it says so instead of inventing data. */
+export const needsSetup = !isDemo && (!config.supabaseUrl || !config.supabaseAnonKey);
 
 /**
  * Staff log in with a short username; Supabase needs an email. Must match the address the

@@ -9,11 +9,14 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Plate from '#lib/components/Plate.svelte';
+	import EmptyState from '#lib/components/EmptyState.svelte';
+	import { needsSetup } from '#lib/config.js';
 	import { backend, canEnter, homeFor, initSession, session } from '#lib/session.svelte.js';
 
 	let { children } = $props();
 
 	onMount(() => {
+		if (needsSetup) return;
 		initSession();
 		if (!import.meta.env.DEV) {
 			import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
@@ -49,7 +52,15 @@
 </script>
 
 <div class="app">
-	{#if allowed}
+	{#if needsSetup}
+		<div class="setup">
+			<Plate size="lg" />
+			<EmptyState flush title="Falta conectar la base de datos">
+				<p>Esta copia de la app no tiene las variables de Supabase, así que no puede cargar el local.</p>
+				<p>En Vercel: Settings → Environment Variables, agrega VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY, y vuelve a publicar desde Deployments → Redeploy.</p>
+			</EmptyState>
+		</div>
+	{:else if allowed}
 		{@render children()}
 	{:else}
 		<div class="splash" aria-busy="true" aria-label="Cargando">
@@ -64,6 +75,12 @@
 		max-width: var(--app-max);
 		min-height: 100dvh;
 		margin: 0 auto;
+	}
+	.setup {
+		display: grid;
+		gap: 24px;
+		justify-items: center;
+		padding: 48px var(--gutter);
 	}
 	.splash {
 		display: grid;

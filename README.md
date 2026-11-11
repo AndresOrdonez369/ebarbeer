@@ -8,10 +8,10 @@ Estado: **fase 7 — endurecida, lista para el piloto**. Caja completa con bolet
 
 ```bash
 npm install
-npm run dev
+npm run dev:demo
 ```
 
-Sin las variables de `.env` la app arranca en **modo demostración**: datos de ejemplo en memoria, tres botones para entrar como Caja, Barbero o Administración. En la vista de administración y del barbero, cada ~14 s cae un corte de ejemplo para ver la jarra subir.
+`dev:demo` arranca el **modo demostración**: datos de ejemplo en memoria, tres botones para entrar como Caja, Barbero o Administración. Solo existe en desarrollo y en las pruebas automáticas: la app publicada nunca muestra datos de ejemplo. Si le faltan las variables de Supabase, dice "Falta conectar la base de datos".
 
 ## Conectar Supabase (una sola vez)
 
@@ -70,7 +70,7 @@ Lógica de dinero de la caja (vueltas, pago mixto, montos rápidos), de la bolet
 node scripts/e2e-caja.mjs
 ```
 
-Recorre la caja en el modo demostración a tamaño de celular con Edge sin ventana: cobro con vueltas, pago mixto, cuentas en espera, sin conexión, anulación, cliente y boleta por WhatsApp, boleta pública y plantilla. Necesita `npm run dev` corriendo. Deja capturas en `.impeccable/review/p2-*.png`.
+Recorre la caja en el modo demostración a tamaño de celular con Edge sin ventana: cobro con vueltas, pago mixto, cuentas en espera, sin conexión, anulación, cliente y boleta por WhatsApp, boleta pública y plantilla. Necesita `npm run dev:demo` corriendo. Deja capturas en `.impeccable/review/p2-*.png`.
 
 ```bash
 node scripts/e2e-barbero.mjs
