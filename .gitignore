@@ -16,3 +16,6 @@ supabase/.branches
 .impeccable/questions
 .impeccable/decision-payload*.json
 .claude/settings.local.json
+
+# Vercel CLI link and its local token (.env.local is already covered by .env.*).
+.vercel
