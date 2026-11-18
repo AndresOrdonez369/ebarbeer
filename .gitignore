@@ -19,3 +19,6 @@ supabase/.branches
 
 # Vercel CLI link and its local token (.env.local is already covered by .env.*).
 .vercel
+
+# Sales film render (the project that makes it is in video/).
+/bar-beer-presentacion.mp4

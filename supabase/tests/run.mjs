@@ -558,6 +558,43 @@ await test('closing history and expected cash for the register', async () => {
 	await rejects(as(U.kike, `select public.my_expected_cash()`), 'permiso');
 });
 
+console.log('\nOpening the register');
+await db.query(`delete from cash_closings where business_date = public.business_date_at(shop_id)`);
+await test('the base the drawer opens with counts in the expected cash', async () => {
+	const before = await one(U.cashier, `select * from public.cash_breakdown()`);
+	eq(before.opening, 0, 'no base yet');
+	const o = await one(U.cashier, `select * from public.open_register(100000)`);
+	eq([o.amount, o.opened_by === ids.luisa, o.changed_at], [100000, true, null]);
+	const after = await one(U.cashier, `select * from public.cash_breakdown()`);
+	eq([after.opening, after.expected - before.expected], [100000, 100000]);
+	eq((await one(U.cashier, `select public.my_expected_cash() as c`)).c, after.expected, 'closing uses it');
+});
+await test('the base can be corrected while the day is open, and the change is recorded', async () => {
+	await as(U.cashier, `select public.open_register(100000)`);
+	eq((await one(U.cashier, `select changed_at from cash_openings`)).changed_at, null, 'same amount is not a change');
+	const o = await one(U.admin, `select * from public.open_register(80000)`);
+	eq([o.amount, o.opened_by === ids.luisa, o.changed_by === ids.admin, o.changed_at != null], [80000, true, true, true]);
+	eq((await one(U.cashier, `select opening from public.cash_breakdown()`)).opening, 80000);
+});
+await test('who can open what', async () => {
+	await rejects(as(U.kike, `select public.open_register(1000)`), 'permiso');
+	await rejects(as(U.cashier, `select public.open_register(-1)`), 'Escribe el efectivo');
+	await rejects(as(U.cashier, `select public.open_register(1000, ${TODAY} - 1)`), 'Solo el administrador');
+	await rejects(as(U.admin, `select public.open_register(1000, ${TODAY} + 1)`), 'no ha llegado');
+	await rejects(as(U.cashier, `insert into cash_openings (shop_id, business_date, amount, opened_by) select shop_id, current_date - 5, 1, id from staff where username = 'luisa'`), 'permission denied');
+	eq((await as(U.kike, `select count(*)::int as n from cash_openings`))[0].n, 0, 'a barber sees no base');
+	eq((await as(U.otherAdmin, `select count(*)::int as n from cash_openings`))[0].n, 0, 'another shop sees none');
+});
+await test('the closing keeps its base; a closed day cannot change it', async () => {
+	const exp = (await one(U.cashier, `select public.my_expected_cash() as c`)).c;
+	const c = await one(U.cashier, `select * from public.close_register(${TODAY}, $1, null)`, [exp]);
+	eq([c.opening_cash, c.expected_cash, c.difference], [80000, exp, 0]);
+	const h = await one(U.admin, `select opening_cash, expected_cash from public.closing_history(${TODAY}, ${TODAY})`);
+	eq([h.opening_cash, h.expected_cash], [80000, exp]);
+	await rejects(as(U.cashier, `select public.open_register(1000)`), 'ya está cerrada');
+	await rejects(as(U.admin, `select public.open_register(1000)`), 'ya está cerrada');
+});
+
 console.log('\nBusiness day');
 await test('1:30 a.m. in Bogotá belongs to the previous day', async () => {
 	const r = (await db.query(`select public.business_date_at(id, '2026-11-11 01:30-05') as d from shops where slug='bar-beer'`)).rows[0];

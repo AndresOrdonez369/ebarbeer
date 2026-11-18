@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DoneStep from '#lib/components/DoneStep.svelte';
 	import Lineup from '#lib/components/Lineup.svelte';
+	import OpenRegister from '#lib/components/OpenRegister.svelte';
 	import PayStep from '#lib/components/PayStep.svelte';
 	import { amount, clock, money } from '#lib/format.js';
 	import { held, heldTotal, hold, loadDraft, saveDraft, take, type Line } from '#lib/held.svelte.js';
@@ -20,8 +21,11 @@
 	const board = live(() => backend.dayBoard());
 	const totals = live(() => backend.dayTotals());
 	const catalog = once(() => backend.catalog());
-	// Shown when the drawer was already counted today: cash charged now falls outside that closing.
-	const closing = once(async () => (await backend.cashDay(await backend.businessDate())).closing);
+	// Today's drawer: asks for the base until it is opened, and warns once it was already counted.
+	const cash = once(async () => backend.cashDay(await backend.businessDate()));
+	let openedNow = $state(false);
+	const closing = $derived(cash.data?.closing ?? null);
+	const mustOpen = $derived(!!cash.data && !cash.data.opening && !cash.data.closing && !openedNow);
 
 	const tabs: { kind: ItemKind; label: string }[] = [
 		{ kind: 'service', label: 'Servicios' },
@@ -224,8 +228,12 @@
 		</div>
 		<span class="fig cuts">{dayCuts != null ? `${dayCuts} cortes` : ''}</span>
 	</section>
-	{#if closing.data}
-		<p class="closed-note">Caja de hoy cerrada a las {clock(closing.data.closedAt)} · el efectivo que cobres ahora queda fuera de ese cierre</p>
+	{#if closing}
+		<p class="closed-note">Caja de hoy cerrada a las {clock(closing.closedAt)} · el efectivo que cobres ahora queda fuera de ese cierre</p>
+	{:else if mustOpen}
+		<div class="opening">
+			<OpenRegister lastBase={cash.data?.lastBase ?? null} onopened={() => (openedNow = true)} />
+		</div>
 	{/if}
 
 	<section class="block">
@@ -322,6 +330,9 @@
 {/if}
 
 <style>
+	.opening {
+		padding: 0 var(--gutter) 14px;
+	}
 	.today {
 		display: flex;
 		justify-content: space-between;

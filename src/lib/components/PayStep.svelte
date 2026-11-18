@@ -29,18 +29,24 @@
 		{ id: 'card', label: 'Tarjeta' },
 		{ id: 'mixed', label: 'Mixto' }
 	];
-	const methods: Method[] = ['cash', 'transfer', 'card'];
+	const sub: Partial<Record<Mode, string>> = { mixed: 'parte y parte' };
+	// Mixed: the cashier types what comes by transfer or card, and cash takes the rest by itself
+	// until she types the cash part too.
+	const methods: Method[] = ['transfer', 'cash', 'card'];
 
 	let mode = $state<Mode>('cash');
 	let receivedText = $state('');
 	let split = $state<Record<Method, string>>({ cash: '', transfer: '', card: '' });
+	let cashAuto = $state(true);
 
 	const received = $derived(parsePesos(receivedText));
+	const autoCash = $derived(Math.max(total - parsePesos(split.transfer) - parsePesos(split.card), 0));
+	const partOf = (m: Method) => (m === 'cash' && cashAuto ? autoCash : parsePesos(split[m]));
 	const splits = $derived<Split[]>(
 		mode === 'mixed'
 			? methods.map((m) => ({
 					method: m,
-					amount: parsePesos(split[m]),
+					amount: partOf(m),
 					cashReceived: m === 'cash' && received ? received : null
 				}))
 			: [{ method: mode, amount: total, cashReceived: mode === 'cash' && received ? received : null }]
@@ -102,8 +108,19 @@
 	}
 
 	function rest(m: Method) {
-		const others = methods.filter((x) => x !== m).reduce((s, x) => s + parsePesos(split[x]), 0);
+		if (m === 'cash') {
+			cashAuto = true;
+			return;
+		}
+		// With cash on automatic, "the rest" here means cash ends at zero.
+		const others = methods.filter((x) => x !== m && !(x === 'cash' && cashAuto)).reduce((s, x) => s + partOf(x), 0);
 		split[m] = amount(Math.max(total - others, 0));
+	}
+
+	function halves() {
+		split.transfer = amount(Math.round(total / 2));
+		split.card = '';
+		cashAuto = true;
 	}
 
 	function typed(e: Event, set: (v: string) => void) {
@@ -142,25 +159,35 @@
 	<div class="modes" role="radiogroup" aria-label="Método de pago">
 		{#each modes as m (m.id)}
 			<button type="button" role="radio" aria-checked={mode === m.id} onclick={() => (mode = m.id)} disabled={busy}>
-				{m.label}
+				{m.label}{#if sub[m.id]}<small>{sub[m.id]}</small>{/if}
 			</button>
 		{/each}
 	</div>
 
 	{#if mode === 'mixed'}
 		<div class="split">
+			<div class="splithead">
+				<p>Escribe lo que pagan por transferencia o tarjeta; el resto queda en efectivo.</p>
+				<button type="button" class="restbtn" onclick={halves} disabled={busy}>Mitad y mitad</button>
+			</div>
 			{#each methods as m (m)}
+				{@const auto = m === 'cash' && cashAuto}
 				<label class="row">
-					<span class="name">{methodLabel[m]}</span>
+					<span class="name">{methodLabel[m]}{#if auto}<small>el resto</small>{/if}</span>
 					<input
+						class:auto
 						inputmode="numeric"
 						autocomplete="off"
 						placeholder="0"
-						value={split[m]}
-						oninput={(e) => typed(e, (v) => (split[m] = v))}
+						value={auto ? (autoCash ? amount(autoCash) : '') : split[m]}
+						oninput={(e) =>
+							typed(e, (v) => {
+								if (m === 'cash') cashAuto = false;
+								split[m] = v;
+							})}
 						disabled={busy}
 					/>
-					<button type="button" class="restbtn" onclick={() => rest(m)} disabled={busy}>Resto</button>
+					<button type="button" class="restbtn" onclick={() => rest(m)} disabled={busy || auto}>Resto</button>
 				</label>
 			{/each}
 			<p class="left" class:ok={remaining === 0}>
@@ -335,6 +362,31 @@
 		background: var(--blue);
 		border-color: var(--blue);
 		color: #fff;
+	}
+	.modes small,
+	.name small {
+		display: block;
+		font-size: var(--fs-xs);
+		font-weight: 500;
+		opacity: 0.8;
+	}
+	.splithead {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 10px;
+	}
+	.splithead p {
+		font-size: var(--fs-xs);
+		color: var(--foam-dim);
+		max-width: 30ch;
+	}
+	.splithead .restbtn {
+		flex: none;
+	}
+	input.auto {
+		border-style: dashed;
+		color: var(--foam-dim);
 	}
 	.split {
 		margin-top: 14px;

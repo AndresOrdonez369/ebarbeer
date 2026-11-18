@@ -233,19 +233,36 @@ export interface Closing {
 	date: string;
 	closedAt: string;
 	closedBy: string | null;
+	/** The base the drawer opened with that day. */
+	openingCash: number;
 	expectedCash: number;
 	countedCash: number;
 	difference: number;
 	notes: string | null;
 }
 
-/** The register's cash for one business day, and its closing if it was closed. */
+/** The cash the drawer started a business day with ("abrir caja"). */
+export interface Opening {
+	date: string;
+	amount: number;
+	openedAt: string;
+	openedBy: string | null;
+	/** Set when the base was corrected after the first opening. */
+	changedAt: string | null;
+	changedBy: string | null;
+}
+
+/** The register's cash for one business day, its opening and its closing. */
 export interface CashDay {
 	date: string;
-	/** Cash charged that day, minus cash paid to barbers from the drawer. */
+	/** Base + cash charged that day − cash paid to barbers from the drawer. */
 	expectedCash: number;
+	openingCash: number;
 	cashIn: number;
 	paidOut: number;
+	opening: Opening | null;
+	/** The base of the last day opened before this one, to suggest it. */
+	lastBase: number | null;
 	closing: Closing | null;
 }
 
@@ -387,6 +404,8 @@ export interface Backend {
 	saveShopSettings(settings: ShopSettings): Promise<void>;
 	/** Register and admin: the cash of a business day and its closing. */
 	cashDay(date: string): Promise<CashDay>;
+	/** Opens the register with this base, or corrects it while the day is open. Today unless a date is given (admin). */
+	openRegister(amount: number, date?: string): Promise<Opening>;
 	closeRegister(date: string, counted: number, notes: string | null): Promise<Closing>;
 	/** Admin: closings between two business dates, newest first. */
 	closings(from: string, to: string): Promise<Closing[]>;

@@ -7,8 +7,7 @@
 		{ name: 'Pagos a barberos', href: '/admin/pagos' },
 		{ name: 'Bonos', href: '/admin/bonos' },
 		{ name: 'Historial de cierres', href: '/admin/cierres' },
-		{ name: 'Anulaciones', href: '/admin/anulaciones' },
-		{ name: 'Módulos del local', phase: 7 }
+		{ name: 'Anulaciones', href: '/admin/anulaciones' }
 	];
 </script>
 

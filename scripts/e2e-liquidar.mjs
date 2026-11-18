@@ -84,7 +84,9 @@ await shot('2-kike-hoy');
 await tap('Semana');
 await sleep(700);
 t = await text();
-check(t.includes('Esta semana') && t.includes('Pagos'), 'week view lists the nights he was already paid');
+// The demo shop is closed on Mondays, so on a Monday or Tuesday this week has no earlier night to list.
+const pastNight = ![1, 2].includes(new Date().getDay());
+check(t.includes('Esta semana') && (!pastNight || t.includes('Pagos')), 'week view lists the nights he was already paid');
 await tap('Mes');
 await sleep(700);
 check((await text()).includes('Le toca') || (await text()).includes('Al día'), 'month view');

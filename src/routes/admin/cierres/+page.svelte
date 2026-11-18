@@ -1,7 +1,7 @@
 <script lang="ts">
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import RangePicker from '#lib/components/RangePicker.svelte';
-	import { clock, dayLabel, money, periodRange, type PeriodKind } from '#lib/format.js';
+	import { amount, clock, dayLabel, money, periodRange, type PeriodKind } from '#lib/format.js';
 	import { once } from '#lib/live.svelte.js';
 	import { backend } from '#lib/session.svelte.js';
 	import { AppError, type Closing } from '#lib/types.js';
@@ -64,14 +64,14 @@
 						<span class="n">{dayLabel(c.date)}<small>{c.closedBy ?? 'Caja'} · {clock(c.closedAt)}</small></span>
 						<span class="cash">
 							<span class="fig">{money(c.countedCash)}</span>
-							<small>de {money(c.expectedCash)}</small>
+							<small>de {money(c.expectedCash)}{c.openingCash > 0 ? ` · base ${amount(c.openingCash)}` : ''}</small>
 						</span>
 						<span class="d">{diffWords(c.difference)}</span>
 						{#if c.notes}<p class="notes">“{c.notes}”</p>{/if}
 					</li>
 				{/each}
 			</ul>
-			<p class="legend">Contado en el cajón frente a lo que debía haber en efectivo según las cuentas cobradas.</p>
+			<p class="legend">Contado en el cajón frente a lo que debía haber: la base con que abrió, más el efectivo cobrado, menos lo pagado en efectivo a los barberos.</p>
 		{/if}
 	{:else}
 		<div class="sk" aria-busy="true"></div>

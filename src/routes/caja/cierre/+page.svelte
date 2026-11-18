@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { parsePesos } from '#lib/bill.js';
+	import OpenRegister from '#lib/components/OpenRegister.svelte';
 	import { addDays, amount, clock, dayLabel, money, moneyNb } from '#lib/format.js';
 	import { outbox } from '#lib/outbox.svelte.js';
 	import { backend, session } from '#lib/session.svelte.js';
@@ -15,6 +16,7 @@
 	let countedText = $state('');
 	let notes = $state('');
 	let confirming = $state(false);
+	let editingBase = $state(false);
 	let busy = $state(false);
 	let msg = $state('');
 
@@ -52,8 +54,15 @@
 		countedText = '';
 		notes = '';
 		confirming = false;
+		editingBase = false;
 		msg = '';
 		load(d);
+	}
+
+	function baseSet() {
+		editingBase = false;
+		confirming = false;
+		if (date) load(date);
 	}
 
 	const counted = $derived(countedText ? parsePesos(countedText) : null);
@@ -90,6 +99,17 @@
 		}
 	}
 
+	// "Base $ 100.000 + cobrado en efectivo $ 445.000 − pagado a barberos $ 61.000", only when there is more than one part.
+	const calc = $derived.by(() => {
+		if (!day || (day.openingCash <= 0 && day.paidOut <= 0)) return '';
+		const s = [
+			day.openingCash > 0 ? `Base ${moneyNb(day.openingCash)} + c` : 'C',
+			`obrado en efectivo ${moneyNb(day.cashIn)}`,
+			day.paidOut > 0 ? ` − pagado a barberos ${moneyNb(day.paidOut)}` : ''
+		];
+		return s.join('');
+	});
+
 	const diffWords = (d: number) => (d === 0 ? 'Cuadra' : d < 0 ? `Faltan ${money(-d)}` : `Sobran ${money(d)}`);
 </script>
 
@@ -113,6 +133,7 @@
 		<div class="closed">
 			<p class="stamp">Caja cerrada</p>
 			<dl>
+				{#if c.openingCash > 0}<div><dt>Base</dt><dd class="fig">{money(c.openingCash)}</dd></div>{/if}
 				<div><dt>Debía haber</dt><dd class="fig">{money(c.expectedCash)}</dd></div>
 				<div><dt>Contado</dt><dd class="fig">{money(c.countedCash)}</dd></div>
 				<div class="d" class:short={c.difference < 0}>
@@ -130,11 +151,34 @@
 		<div class="expected">
 			<span class="label">Debería haber en efectivo</span>
 			<span class="fig big">{money(day.expectedCash)}</span>
-			{#if day.paidOut > 0}
-				<span class="calc">Cobrado en efectivo {moneyNb(day.cashIn)} − pagado a barberos {moneyNb(day.paidOut)}</span>
-			{/if}
-			<span class="hint">Lo cobrado en efectivo {date === today ? 'hoy' : 'ese día'}, sin cuentas anuladas{day.paidOut > 0 ? ', menos lo que se les pagó a los barberos en efectivo' : ''}. Transferencias y tarjeta no van en el cajón.</span>
+			{#if calc}<span class="calc">{calc}</span>{/if}
+			<span class="hint">{day.openingCash > 0 ? 'La base con que abrió la caja, más lo' : 'Lo'} cobrado en efectivo {date === today ? 'hoy' : 'ese día'}, sin cuentas anuladas{day.paidOut > 0 ? ', menos lo que se les pagó a los barberos en efectivo' : ''}. Transferencias y tarjeta no van en el cajón.</span>
 		</div>
+
+		{#if date === today && !day.opening}
+			<div class="base-missing">
+				<p class="warn-text">Hoy no se abrió la caja. Escribe con cuánto efectivo empezó el cajón para que el cierre cuadre.</p>
+				<OpenRegister lastBase={day.lastBase} onopened={baseSet} />
+			</div>
+		{:else if day.opening}
+			{@const o = day.opening}
+			<div class="base" class:editing={editingBase}>
+				{#if editingBase}
+					<OpenRegister lastBase={day.lastBase} current={o.amount} onopened={baseSet} oncancel={() => (editingBase = false)} />
+				{:else}
+					<p>
+						<span class="label">Base del día</span>
+						<b class="fig">{money(o.amount)}</b>
+						<small>
+							Abrió {o.openedBy ?? 'la caja'} · {clock(o.openedAt)}{#if o.changedAt} · cambiada por {o.changedBy ?? 'alguien'} a las {clock(o.changedAt)}{/if}
+						</small>
+					</p>
+					{#if date === today}
+						<button type="button" class="btn btn-outline" onclick={() => (editingBase = true)} disabled={busy}>Cambiar</button>
+					{/if}
+				{/if}
+			</div>
+		{/if}
 
 		{#if pending && date === today}
 			<p class="warn" role="status">
@@ -227,6 +271,38 @@
 	.calc {
 		font-size: var(--fs-sm);
 		color: var(--foam);
+	}
+	.base-missing {
+		display: grid;
+		gap: 10px;
+		margin-bottom: 18px;
+	}
+	.warn-text {
+		font-size: var(--fs-sm);
+		color: var(--amber);
+	}
+	.base {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
+		margin: -4px 0 18px;
+		padding-bottom: 14px;
+		border-bottom: 1px solid var(--line);
+	}
+	.base.editing {
+		display: block;
+	}
+	.base p {
+		display: grid;
+		gap: 2px;
+	}
+	.base b {
+		font-size: var(--fs-fig-sm);
+	}
+	.base small {
+		font-size: var(--fs-xs);
+		color: var(--foam-dim);
 	}
 	.expected {
 		display: grid;

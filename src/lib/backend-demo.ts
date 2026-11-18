@@ -14,6 +14,7 @@ import {
 	type Customer,
 	type DayRow,
 	type ItemKind,
+	type Opening,
 	type PayMethod,
 	type PayoutMethod,
 	type Settlement,
@@ -119,6 +120,8 @@ interface DemoState {
 	rules: BonusRule[];
 	/** Closings made in this demo; older days get a synthetic one. */
 	closings: Closing[];
+	/** Openings made in this demo; older days opened with DEMO_BASE. Missing in demos saved before it existed. */
+	openings?: Opening[];
 	/** Payments made at the register in this demo; past days are paid by the synthetic history. */
 	settlements: DemoSettlement[];
 	voids: Record<string, { at: string; by: string }>;
@@ -235,6 +238,15 @@ function loadState(): DemoState {
 	return fresh();
 }
 st = loadState();
+// A sales demo or a screen recording can rename people without touching the example data:
+// sessionStorage 'barbeer-demo-names' = {"d-luisa":"Andrea"}.
+try {
+	const names = JSON.parse(sessionStorage.getItem('barbeer-demo-names') ?? '{}') as Record<string, string>;
+	for (const t of st.team) if (names[t.id]) t.name = names[t.id];
+} catch {
+	/* keep the example names */
+}
+st.openings ??= [];
 lineSeq = st.lines.length + 1;
 function persist() {
 	try {
@@ -391,6 +403,10 @@ const profiles: Record<Role, Profile> = {
 	barber: { staffId: 'd-kike', shopId: SHOP.id, shopName: SHOP.name, role: 'barber', displayName: 'Kike', cuts: true }
 };
 
+// Names come from the team, so renaming a person in the demo shows everywhere.
+const cashierName = () => nameOfId('d-luisa') ?? 'Luisa';
+const asProfile = (p: Profile): Profile => ({ ...p, displayName: nameOfId(p.staffId) ?? p.displayName, shopName: st.shop.name });
+
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach((cb) => cb());
@@ -500,7 +516,7 @@ function settleOf(barberId: string, from: string, to: string): Settlement {
 	if (from <= yesterday)
 		for (const d of datesBetween(from, to < yesterday ? to : yesterday)) {
 			const p = pastPayout(barberId, d);
-			if (p) payouts.push({ id: `d-pay-${barberId}-${d}`, paidAt: new Date(d + 'T22:40:00').toISOString(), total: p.total, method: 'cash', paidBy: 'Luisa', from: d, to: d });
+			if (p) payouts.push({ id: `d-pay-${barberId}-${d}`, paidAt: new Date(d + 'T22:40:00').toISOString(), total: p.total, method: 'cash', paidBy: cashierName(), from: d, to: d });
 		}
 	for (const x of own)
 		if (x.date >= from && x.date <= to)
@@ -533,32 +549,49 @@ function settleOf(barberId: string, from: string, to: string): Settlement {
 		owedFrom: unpaidNow.length ? unpaidNow.sort()[0] : null
 	};
 }
-/** Cash charged on a day, cash paid out to barbers, and what the drawer should hold. */
+/** The synthetic past opened every day with this base. */
+const DEMO_BASE = 100000;
+function openingOf(date: string): Opening | null {
+	const own = st.openings!.find((o) => o.date === date);
+	if (own) return { ...own };
+	if (date >= todayIso() || !isOpen(date)) return null;
+	return {
+		date,
+		amount: DEMO_BASE,
+		openedAt: new Date(date + 'T09:05:00').toISOString(),
+		openedBy: cashierName(),
+		changedAt: null,
+		changedBy: null
+	};
+}
+/** The base, cash charged on a day, cash paid out to barbers, and what the drawer should hold. */
 function cashOf(date: string) {
 	const today = todayIso();
-	if (date > today) return { cashIn: 0, paidOut: 0, expected: 0 };
+	if (date > today) return { opening: 0, cashIn: 0, paidOut: 0, expected: 0 };
+	const opening = openingOf(date)?.amount ?? 0;
 	if (date === today) {
 		const cashIn = methodsToday().cash;
 		const paidOut = st.settlements.filter((x) => x.date === today && x.method === 'cash').reduce((s, x) => s + x.commission + x.bonus, 0);
-		return { cashIn, paidOut, expected: cashIn - paidOut };
+		return { opening, cashIn, paidOut, expected: opening + cashIn - paidOut };
 	}
 	const cashIn = dayData(date).methods.cash;
 	const paidOut = st.team.filter((t) => t.cuts).reduce((s, t) => s + (pastPayout(t.id, date)?.total ?? 0), 0);
-	return { cashIn, paidOut, expected: cashIn - paidOut };
+	return { opening, cashIn, paidOut, expected: opening + cashIn - paidOut };
 }
 
 function closingOf(date: string): Closing | null {
 	const own = st.closings.find((c) => c.date === date);
-	if (own) return { ...own };
+	if (own) return { ...own, openingCash: own.openingCash ?? 0 };
 	const today = todayIso();
 	if (date >= today || date < addDays(today, -90) || !isOpen(date)) return null;
-	const expected = cashOf(date).expected;
+	const { expected, opening } = cashOf(date);
 	const r = hash('close' + date);
 	const difference = r < 0.72 ? 0 : r < 0.86 ? -2000 : r < 0.95 ? 1000 : -5000;
 	return {
 		date,
 		closedAt: new Date(addDays(date, 1) + 'T01:40:00').toISOString(),
-		closedBy: 'Luisa',
+		closedBy: cashierName(),
+		openingCash: opening,
 		expectedCash: expected,
 		countedCash: expected + difference,
 		difference,
@@ -649,7 +682,7 @@ export function createDemoBackend(): Backend {
 
 		async restore() {
 			const r = role.get();
-			current = r ? profiles[r] : null;
+			current = r ? asProfile(profiles[r]) : null;
 			return current;
 		},
 
@@ -658,7 +691,7 @@ export function createDemoBackend(): Backend {
 			const r = user.replace('demo:', '') as Role;
 			if (!profiles[r]) throw new AppError('En la demostración usa uno de los tres botones.');
 			role.set(r);
-			current = profiles[r];
+			current = asProfile(profiles[r]);
 			return current;
 		},
 
@@ -1026,7 +1059,39 @@ export function createDemoBackend(): Backend {
 		async cashDay(date) {
 			await wait(120);
 			const c = cashOf(date);
-			return { date, expectedCash: c.expected, cashIn: c.cashIn, paidOut: c.paidOut, closing: closingOf(date) };
+			const earlier = st.openings!.filter((o) => o.date < date).sort((a, b) => b.date.localeCompare(a.date))[0];
+			return {
+				date,
+				expectedCash: c.expected,
+				openingCash: c.opening,
+				cashIn: c.cashIn,
+				paidOut: c.paidOut,
+				opening: openingOf(date),
+				lastBase: earlier?.amount ?? DEMO_BASE,
+				closing: closingOf(date)
+			};
+		},
+
+		async openRegister(amount, date) {
+			await wait(250);
+			if (!current || current.role === 'barber') throw new AppError('No tienes permiso para esta acción');
+			const today = todayIso();
+			const d = date ?? today;
+			if (!Number.isInteger(amount) || amount < 0 || amount > 100000000) throw new AppError('Escribe el efectivo con que abre la caja');
+			if (d > today) throw new AppError('No se puede abrir la caja de un día que no ha llegado');
+			if (current.role === 'cashier' && d !== today) throw new AppError('Solo el administrador puede cambiar la base de días anteriores');
+			if (closingOf(d)) throw new AppError('La caja de ese día ya está cerrada');
+			const at = new Date().toISOString();
+			const prev = openingOf(d);
+			const o: Opening = !prev
+				? { date: d, amount, openedAt: at, openedBy: current.displayName, changedAt: null, changedBy: null }
+				: prev.amount === amount
+					? prev
+					: { ...prev, amount, changedAt: at, changedBy: current.displayName };
+			st.openings = [...st.openings!.filter((x) => x.date !== d), o];
+			persist();
+			notify();
+			return { ...o };
 		},
 
 		async closeRegister(date, counted, notes) {
@@ -1035,11 +1100,12 @@ export function createDemoBackend(): Backend {
 			if (current?.role === 'cashier' && date < addDays(todayIso(), -1))
 				throw new AppError('Solo el administrador puede cerrar días anteriores');
 			if (closingOf(date)) throw new AppError('Ese día ya tiene cierre');
-			const expected = cashOf(date).expected;
+			const { expected, opening } = cashOf(date);
 			const c: Closing = {
 				date,
 				closedAt: new Date().toISOString(),
 				closedBy: current?.displayName ?? null,
+				openingCash: opening,
 				expectedCash: expected,
 				countedCash: counted,
 				difference: counted - expected,
@@ -1244,7 +1310,7 @@ export function createDemoBackend(): Backend {
 					voidedAt: st.voids[s.id]?.at ?? s.createdAt,
 					reason: s.voidReason ?? null,
 					voidedBy: st.voids[s.id]?.by ?? null,
-					cashier: 'Luisa'
+					cashier: cashierName()
 				}))
 				.sort((a, b) => (b.voidedAt ?? '').localeCompare(a.voidedAt ?? ''));
 		},

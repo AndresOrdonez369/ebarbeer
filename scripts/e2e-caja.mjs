@@ -77,6 +77,35 @@ await page.evaluate(() => {
 await page.goto(BASE + '/caja', { waitUntil: 'networkidle0' });
 await sleep(1200);
 
+console.log('Opening the register');
+check((await text()).includes('¿Con cuánto efectivo empieza el cajón?'), 'the day starts asking for the base');
+await shot('0-abrir', '.opening');
+await tap('Igual que la última vez');
+await sleep(100);
+check((await page.$eval('.opening input', (e) => e.value)) === '100.000', 'one tap repeats the last base');
+await tap('Abrir caja con $ 100.000');
+await sleep(600);
+check(!(await text()).includes('¿Con cuánto efectivo empieza el cajón?'), 'the card goes away once opened');
+await page.goto(BASE + '/caja/cierre', { waitUntil: 'networkidle0' });
+await sleep(800);
+let k = await text();
+check(k.includes('Base del día') && k.includes('Base $ 100.000 + cobrado en efectivo'), 'the closing counts from the base');
+await shot('0-cierre-base', '.expected');
+await tap('Cambiar');
+await sleep(150);
+await page.evaluate(() => {
+	const el = document.querySelector('.base input');
+	el.value = '80000';
+	el.dispatchEvent(new Event('input', { bubbles: true }));
+});
+await tap('Guardar base');
+await sleep(600);
+k = await text();
+check(k.includes('Base $ 80.000 + cobrado') && k.includes('cambiada por'), 'the base can be corrected, and it says so');
+await page.goto(BASE + '/caja', { waitUntil: 'networkidle0' });
+await sleep(1000);
+check(!(await text()).includes('¿Con cuánto efectivo empieza el cajón?'), 'opened stays opened');
+
 console.log('Cash with change');
 await tap('Kike');
 await tap('Corte + barba');
@@ -126,10 +155,21 @@ await page.evaluate(() => {
 	set(inputs[0], '20000');
 });
 await sleep(100);
-check((await text()).includes('Faltan $ 25.000'), 'mixed shows what is missing');
-await page.evaluate(() => [...document.querySelectorAll('.restbtn')][1].click());
+const parts = () => page.$$eval('.split input', (els) => els.map((e) => e.value));
+check((await text()).includes('Suma exacta') && (await parts())[1] === '25.000', 'transfer typed, cash takes the rest by itself');
+await tap('Mitad y mitad');
 await sleep(100);
-check((await text()).includes('Suma exacta'), '"Resto" completes the transfer part');
+check(JSON.stringify(await parts()) === JSON.stringify(['22.500', '22.500', '']), '"Mitad y mitad" splits transfer and cash');
+await page.evaluate(() => {
+	const cash = document.querySelectorAll('.split input')[1];
+	cash.value = '10000';
+	cash.dispatchEvent(new Event('input', { bubbles: true }));
+});
+await sleep(100);
+check((await text()).includes('Faltan $ 12.500'), 'typing the cash part turns the automatic rest off');
+await page.evaluate(() => [...document.querySelectorAll('.split .row .restbtn')][0].click());
+await sleep(100);
+check((await text()).includes('Suma exacta') && (await parts())[0] === '35.000', '"Resto" completes the transfer part');
 await shot('4-mixto');
 await tap('Cobrar $ 45.000');
 await sleep(900);

@@ -537,32 +537,67 @@ export function createLiveBackend(): Backend {
 		},
 
 		async cashDay(date) {
-			const [{ data: cash, error: e1 }, { data: k, error: e2 }] = await Promise.all([
+			const name = (x: unknown) => (x as { display_name: string } | null)?.display_name ?? null;
+			const [{ data: cash, error: e1 }, { data: k, error: e2 }, { data: o, error: e3 }, { data: last, error: e4 }] = await Promise.all([
 				sb.rpc('cash_breakdown', { p_date: date }),
 				sb
 					.from('cash_closings')
-					.select('business_date, closed_at, expected_cash, counted_cash, difference, notes, staff(display_name)')
+					.select('business_date, closed_at, expected_cash, counted_cash, difference, notes, opening_cash, staff(display_name)')
 					.eq('business_date', date)
-					.maybeSingle()
+					.maybeSingle(),
+				sb
+					.from('cash_openings')
+					.select(
+						'business_date, amount, opened_at, changed_at, opener:staff!cash_openings_opened_by_fkey(display_name), changer:staff!cash_openings_changed_by_fkey(display_name)'
+					)
+					.eq('business_date', date)
+					.maybeSingle(),
+				sb.from('cash_openings').select('amount').lt('business_date', date).order('business_date', { ascending: false }).limit(1).maybeSingle()
 			]);
-			if (e1 || e2) throw toError(e1 ?? e2, 'No se pudo cargar la caja.');
-			const c = (cash as { cash_in: number; paid_out: number; expected: number }[] | null)?.[0];
+			if (e1 || e2 || e3 || e4) throw toError(e1 ?? e2 ?? e3 ?? e4, 'No se pudo cargar la caja.');
+			const c = (cash as { opening: number; cash_in: number; paid_out: number; expected: number }[] | null)?.[0];
 			return {
 				date,
 				expectedCash: c?.expected ?? 0,
+				openingCash: c?.opening ?? 0,
 				cashIn: c?.cash_in ?? 0,
 				paidOut: c?.paid_out ?? 0,
+				opening: o
+					? {
+							date: o.business_date,
+							amount: o.amount,
+							openedAt: o.opened_at,
+							openedBy: name(o.opener),
+							changedAt: o.changed_at,
+							changedBy: name(o.changer)
+						}
+					: null,
+				lastBase: last?.amount ?? null,
 				closing: k
 					? {
 							date: k.business_date,
 							closedAt: k.closed_at,
-							closedBy: (k.staff as unknown as { display_name: string } | null)?.display_name ?? null,
+							closedBy: name(k.staff),
+							openingCash: k.opening_cash,
 							expectedCash: k.expected_cash,
 							countedCash: k.counted_cash,
 							difference: k.difference,
 							notes: k.notes
 						}
 					: null
+			};
+		},
+
+		async openRegister(amount, date) {
+			const { data, error } = await sb.rpc('open_register', { p_amount: amount, p_date: date ?? null });
+			if (error) throw toError(error, 'No se pudo abrir la caja.');
+			return {
+				date: data.business_date,
+				amount: data.amount,
+				openedAt: data.opened_at,
+				openedBy: null,
+				changedAt: data.changed_at,
+				changedBy: null
 			};
 		},
 
@@ -573,6 +608,7 @@ export function createLiveBackend(): Backend {
 				date: data.business_date,
 				closedAt: data.closed_at,
 				closedBy: null,
+				openingCash: data.opening_cash,
 				expectedCash: data.expected_cash,
 				countedCash: data.counted_cash,
 				difference: data.difference,
@@ -587,6 +623,7 @@ export function createLiveBackend(): Backend {
 				date: r.business_date,
 				closedAt: r.closed_at,
 				closedBy: r.closed_by,
+				openingCash: r.opening_cash ?? 0,
 				expectedCash: r.expected_cash,
 				countedCash: r.counted_cash,
 				difference: r.difference,
