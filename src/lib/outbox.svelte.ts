@@ -48,13 +48,14 @@ function save() {
 
 /**
  * Charges a bill. Returns the server result, or null when it was queued for later (offline).
- * Throws AppError when the server refused the bill (nothing is queued then).
+ * Throws AppError when the server refused the bill (nothing is queued then), RepeatError when the
+ * same bill was charged minutes ago and `repeat` does not say it is another customer.
  */
-export async function charge(p: Omit<Pending, 'status'>): Promise<ChargeResult | null> {
+export async function charge(p: Omit<Pending, 'status'>, repeat = false): Promise<ChargeResult | null> {
 	outbox.items.unshift({ ...p, status: 'pending' });
 	save();
 	try {
-		const r = await backend.registerSale(p.id, p.lines, p.payments, p.customer);
+		const r = await backend.registerSale(p.id, p.lines, p.payments, p.customer, repeat);
 		remove(p.id);
 		return r;
 	} catch (e) {
@@ -78,7 +79,8 @@ export async function flush(): Promise<void> {
 		for (const item of [...outbox.items].reverse()) {
 			if (item.status !== 'pending') continue;
 			try {
-				await backend.registerSale(item.id, item.lines, item.payments, item.customer ?? null);
+				// Already confirmed at the register (queued bills were checked against the queue there).
+				await backend.registerSale(item.id, item.lines, item.payments, item.customer ?? null, true);
 				remove(item.id);
 			} catch (e) {
 				if (e instanceof NetworkError) break;

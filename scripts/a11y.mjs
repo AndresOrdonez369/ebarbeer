@@ -38,6 +38,7 @@ const screens = [
 	['admin', '/admin/pagos/d-dago?k=week&o=0'],
 	['admin', '/admin/cierres'],
 	['admin', '/admin/anulaciones'],
+	['admin', '/admin/cuentas'],
 	[null, '/b/demo0000000000000000000000000023'],
 	// The payment step: pick a barber, add a cut, open Cobrar.
 	['cashier', '/caja', async () => {

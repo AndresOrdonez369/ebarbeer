@@ -385,16 +385,23 @@ export interface Backend {
 	dayTotals(): Promise<DayTotals>;
 	catalog(): Promise<CatalogItem[]>;
 	staff(): Promise<StaffMember[]>;
-	/** Charges a bill. Idempotent on id: retrying the same id never charges twice. */
+	/**
+	 * Charges a bill. Idempotent on id: retrying the same id never charges twice.
+	 * Throws RepeatError when the same bill was charged minutes ago, unless `repeat` says it is
+	 * another customer.
+	 */
 	registerSale(
 		id: string,
 		lines: BillLineInput[],
 		payments: PaymentInput[],
-		customer?: CustomerInput | null
+		customer?: CustomerInput | null,
+		repeat?: boolean
 	): Promise<ChargeResult>;
 	voidSale(id: string, reason: string): Promise<void>;
 	/** Bills of the current business day, newest first. */
 	todaySales(): Promise<SaleRecord[]>;
+	/** Bills of one business day, newest first (admin: any day; cashier: today and yesterday). */
+	daySales(date: string): Promise<SaleRecord[]>;
 	/** Customers whose phone contains these digits (4 or more), newest first. */
 	searchCustomers(digits: string): Promise<Customer[]>;
 	/** Attaches a customer to a bill already charged. */
@@ -458,3 +465,18 @@ export interface Backend {
 export class AppError extends Error {}
 /** The request never reached the server (offline, timeout). Safe to retry. */
 export class NetworkError extends AppError {}
+
+/** The bill the cashier is about to charge again. receiptNo is null while it waits to be sent. */
+export interface TwinSale {
+	receiptNo: number | null;
+	createdAt: string;
+	total: number;
+	methods: PayMethod[];
+	cashier: string | null;
+}
+/** The same bill was charged minutes ago: ask before charging it again. */
+export class RepeatError extends AppError {
+	constructor(readonly twin: TwinSale) {
+		super('Ya se cobró una cuenta igual hace un momento');
+	}
+}

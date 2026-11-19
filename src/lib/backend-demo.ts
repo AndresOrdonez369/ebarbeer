@@ -5,6 +5,7 @@
 import {
 	AppError,
 	NetworkError,
+	RepeatError,
 	type Award,
 	type Backend,
 	type BoardRow,
@@ -27,6 +28,7 @@ import {
 	type StaffMember
 } from './types.js';
 import { normalizePhone } from './receipt.js';
+import { findTwin, type TwinLine } from './repeat.js';
 
 const SHOP = { id: 'demo-shop', name: 'Bar Beer' };
 const seedTeam: StaffMember[] = [
@@ -754,7 +756,7 @@ export function createDemoBackend(): Backend {
 			return st.team.map((x) => ({ ...x }));
 		},
 
-		async registerSale(id, lines, payments, customer) {
+		async registerSale(id, lines, payments, customer, repeat = false) {
 			await wait(350);
 			if (!navigator.onLine) throw new NetworkError('Sin conexión.');
 			const existing = st.sales.find((s) => s.id === id);
@@ -779,6 +781,23 @@ export function createDemoBackend(): Backend {
 			const total = recLines.reduce((s, l) => s + l.it.price * l.qty, 0);
 			const paid = payments.reduce((s, p) => s + p.amount, 0);
 			if (paid !== total) throw new AppError(`Los pagos (${paid}) no suman el total (${total})`);
+			// Like the server: the same bill charged minutes ago waits for "es otro cliente".
+			if (!repeat) {
+				const asTwin = (ls: { name: string; barberId: string | null; qty: number }[]): TwinLine[] =>
+					ls.map((l) => ({ key: l.name, barberId: l.barberId, qty: l.qty }));
+				const twin = findTwin(
+					{ at: new Date().toISOString(), lines: asTwin(recLines.map((l) => ({ name: l.it.name, barberId: l.barberId, qty: l.qty }))) },
+					st.sales.filter((s) => s.status === 'ok').map((s) => ({ at: s.createdAt, lines: asTwin(s.lines), s }))
+				);
+				if (twin)
+					throw new RepeatError({
+						receiptNo: twin.s.receiptNo,
+						createdAt: twin.s.createdAt,
+						total: twin.s.total,
+						methods: [...new Set(twin.s.payments.map((p) => p.method))],
+						cashier: null
+					});
+			}
 			const cust = customer?.phone ? upsertCustomer(customer.phone, customer.name, customer.promo) : null;
 
 			const at = new Date().toISOString();
@@ -854,6 +873,11 @@ export function createDemoBackend(): Backend {
 		async todaySales() {
 			await wait(120);
 			return st.sales.map((s) => structuredClone(s));
+		},
+
+		async daySales(date) {
+			await wait(120);
+			return st.sales.filter((s) => iso(new Date(s.createdAt)) === date).map((s) => structuredClone(s));
 		},
 
 		async searchCustomers(digits) {

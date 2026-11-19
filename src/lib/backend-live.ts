@@ -3,6 +3,7 @@ import { config, loginEmail } from './config.js';
 import {
 	AppError,
 	NetworkError,
+	RepeatError,
 	type Backend,
 	type BoardRow,
 	type BonusRule,
@@ -108,6 +109,38 @@ export function createLiveBackend(): Backend {
 		};
 		remember(PROFILE, { ...profile, userId });
 		return profile;
+	}
+
+	async function salesOn(date: string): Promise<SaleRecord[]> {
+		const { data, error } = await sb
+			.from('sales')
+			.select(
+				'id, receipt_no, receipt_token, receipt_sent_at, created_at, total, status, void_reason, customers(id, name, phone), sale_lines(line_no, item_name, qty, line_total, barber_id), payments(method, amount, cash_received)'
+			)
+			.eq('business_date', date)
+			.order('created_at', { ascending: false });
+		if (error) throw toError(error, 'No se pudieron cargar las cuentas.');
+		return (data ?? []).map(
+			(r): SaleRecord => ({
+				id: r.id,
+				receiptNo: r.receipt_no,
+				createdAt: r.created_at,
+				total: r.total,
+				status: r.status,
+				voidReason: r.void_reason,
+				receiptToken: r.receipt_token,
+				receiptSentAt: r.receipt_sent_at,
+				customer: (r.customers as unknown as Customer | null) ?? null,
+				lines: [...(r.sale_lines ?? [])]
+					.sort((a, b) => a.line_no - b.line_no)
+					.map((l) => ({ name: l.item_name, qty: l.qty, total: l.line_total, barberId: l.barber_id })),
+				payments: (r.payments ?? []).map((p) => ({
+					method: p.method as PayMethod,
+					amount: p.amount,
+					cashReceived: p.cash_received
+				}))
+			})
+		);
 	}
 
 	return {
@@ -224,9 +257,10 @@ export function createLiveBackend(): Backend {
 			);
 		},
 
-		async registerSale(id, lines, payments, customer) {
+		async registerSale(id, lines, payments, customer, repeat = false) {
 			if (!navigator.onLine) throw new NetworkError('Sin conexión.');
 			const { data, error } = await sb.rpc('register_sale', {
+				p_repeat: repeat,
 				p_customer: customer?.phone
 					? { phone: customer.phone, name: customer.name ?? null, promo: customer.promo ?? null }
 					: null,
@@ -238,6 +272,21 @@ export function createLiveBackend(): Backend {
 					cash_received: p.method === 'cash' ? (p.cashReceived ?? null) : null
 				}))
 			});
+			if (error?.code === 'BBR01') {
+				let d: { receipt_no?: number; created_at?: string; total?: number; methods?: PayMethod[]; cashier?: string } = {};
+				try {
+					d = JSON.parse(error.details ?? '{}');
+				} catch {
+					/* the warning still stands without its details */
+				}
+				throw new RepeatError({
+					receiptNo: d.receipt_no ?? null,
+					createdAt: d.created_at ?? new Date().toISOString(),
+					total: d.total ?? 0,
+					methods: d.methods ?? [],
+					cashier: d.cashier ?? null
+				});
+			}
 			if (error) throw toError(error, 'No se pudo cobrar. Intenta de nuevo.');
 			return {
 				id: data.id,
@@ -257,36 +306,10 @@ export function createLiveBackend(): Backend {
 		async todaySales() {
 			const { data: totals, error: e1 } = await sb.rpc('day_totals');
 			if (e1 || !totals?.[0]) throw toError(e1, 'No se pudieron cargar las cuentas de hoy.');
-			const { data, error } = await sb
-				.from('sales')
-				.select(
-					'id, receipt_no, receipt_token, receipt_sent_at, created_at, total, status, void_reason, customers(id, name, phone), sale_lines(line_no, item_name, qty, line_total, barber_id), payments(method, amount, cash_received)'
-				)
-				.eq('business_date', totals[0].business_date)
-				.order('created_at', { ascending: false });
-			if (error) throw toError(error, 'No se pudieron cargar las cuentas de hoy.');
-			return (data ?? []).map(
-				(r): SaleRecord => ({
-					id: r.id,
-					receiptNo: r.receipt_no,
-					createdAt: r.created_at,
-					total: r.total,
-					status: r.status,
-					voidReason: r.void_reason,
-					receiptToken: r.receipt_token,
-					receiptSentAt: r.receipt_sent_at,
-					customer: (r.customers as unknown as Customer | null) ?? null,
-					lines: [...(r.sale_lines ?? [])]
-						.sort((a, b) => a.line_no - b.line_no)
-						.map((l) => ({ name: l.item_name, qty: l.qty, total: l.line_total, barberId: l.barber_id })),
-					payments: (r.payments ?? []).map((p) => ({
-						method: p.method as PayMethod,
-						amount: p.amount,
-						cashReceived: p.cash_received
-					}))
-				})
-			);
+			return salesOn(totals[0].business_date);
 		},
+
+		daySales: (date) => salesOn(date),
 
 		async searchCustomers(digits) {
 			const d = digits.replace(/[^0-9]/g, '');

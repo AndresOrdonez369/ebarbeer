@@ -3,20 +3,24 @@
 	import Lineup from '#lib/components/Lineup.svelte';
 	import OpenRegister from '#lib/components/OpenRegister.svelte';
 	import PayStep from '#lib/components/PayStep.svelte';
-	import { amount, clock, money } from '#lib/format.js';
+	import { amount, clock, methodLabel, money } from '#lib/format.js';
 	import { held, heldTotal, hold, loadDraft, saveDraft, take, type Line } from '#lib/held.svelte.js';
 	import { live, once } from '#lib/live.svelte.js';
 	import { charge, outbox } from '#lib/outbox.svelte.js';
 	import { backend } from '#lib/session.svelte.js';
 	import { normalizePhone } from '#lib/receipt.js';
+	import { findTwin, type TwinLine } from '#lib/repeat.js';
 	import { stockState, stockWords } from '#lib/stock.js';
 	import {
 		AppError,
+		RepeatError,
+		type BillLineInput,
 		type CatalogItem,
 		type CustomerInput,
 		type ItemKind,
 		type PaymentInput,
-		type PayMethod
+		type PayMethod,
+		type TwinSale
 	} from '#lib/types.js';
 
 	const board = live(() => backend.dayBoard());
@@ -137,7 +141,56 @@
 		scrollTo({ top: 0 });
 	}
 
-	async function confirm(payments: PaymentInput[], change: number, customer: CustomerInput | null) {
+	// The same bill charged minutes ago: ask before charging it again.
+	let twin = $state<TwinSale | null>(null);
+	let twinArgs: [PaymentInput[], number, CustomerInput | null] | null = null;
+	let twinFirst = $state<HTMLButtonElement | null>(null);
+	$effect(() => twinFirst?.focus());
+	const asTwin = (ls: BillLineInput[]): TwinLine[] => ls.map((l) => ({ key: l.itemId, barberId: l.barberId, qty: l.qty }));
+	function since(at: string) {
+		const min = Math.floor((Date.now() - Date.parse(at)) / 60000);
+		return min < 1 ? 'menos de un minuto' : min === 1 ? '1 minuto' : `${min} minutos`;
+	}
+
+	function keepFirst() {
+		twin = null;
+		twinArgs = null;
+		lines = [];
+		selected = null;
+		saveDraft([]);
+		step = 'cuenta';
+		hint = 'No se cobró otra vez. La cuenta quedó vacía.';
+		scrollTo({ top: 0 });
+	}
+
+	function chargeAnyway() {
+		const args = twinArgs;
+		twin = null;
+		twinArgs = null;
+		if (args) confirm(...args, true);
+	}
+
+	async function confirm(payments: PaymentInput[], change: number, customer: CustomerInput | null, repeat = false) {
+		if (busy) return;
+		const billLines: BillLineInput[] = lines.map((l) => ({ itemId: l.item.id, qty: l.qty, barberId: l.barberId }));
+		// Offline, the server cannot see bills still waiting on this phone: check them here.
+		if (!repeat) {
+			const queued = findTwin(
+				{ at: new Date().toISOString(), lines: asTwin(billLines) },
+				outbox.items.filter((p) => p.status === 'pending').map((p) => ({ at: p.preview.createdAt, lines: asTwin(p.lines), p }))
+			);
+			if (queued) {
+				twinArgs = [payments, change, customer];
+				twin = {
+					receiptNo: null,
+					createdAt: queued.p.preview.createdAt,
+					total: queued.p.preview.total,
+					methods: [...new Set(queued.p.payments.map((x) => x.method))],
+					cashier: null
+				};
+				return;
+			}
+		}
 		busy = true;
 		payError = '';
 		const id = crypto.randomUUID();
@@ -156,7 +209,7 @@
 		try {
 			const result = await charge({
 				id,
-				lines: lines.map((l) => ({ itemId: l.item.id, qty: l.qty, barberId: l.barberId })),
+				lines: billLines,
 				payments,
 				customer,
 				cuts,
@@ -169,7 +222,7 @@
 					lines: lines.map((l) => ({ name: l.item.name, qty: l.qty, total: l.item.price * l.qty, barberId: l.barberId })),
 					payments: payments.map((p) => ({ method: p.method, amount: p.amount, cashReceived: p.cashReceived ?? null }))
 				}
-			});
+			}, repeat);
 			const phone = customer ? normalizePhone(customer.phone) : null;
 			done = {
 				receiptNo: result?.receiptNo ?? null,
@@ -203,7 +256,10 @@
 			}
 		} catch (e) {
 			saveDraft(draft);
-			payError = e instanceof AppError ? e.message : 'No se pudo cobrar. Intenta de nuevo.';
+			if (e instanceof RepeatError) {
+				twinArgs = [payments, change, customer];
+				twin = e.twin;
+			} else payError = e instanceof AppError ? e.message : 'No se pudo cobrar. Intenta de nuevo.';
 		} finally {
 			busy = false;
 		}
@@ -219,7 +275,24 @@
 <svelte:head><title>Caja · Bar Beer</title></svelte:head>
 
 {#if step === 'pago'}
-	<PayStep {total} {count} {busy} error={payError} oncancel={() => (step = 'cuenta')} onconfirm={confirm} />
+	<PayStep {total} {count} {busy} error={payError} oncancel={() => (step = 'cuenta')} onconfirm={(p, c, cu) => confirm(p, c, cu)} />
+	{#if twin}
+		<div class="twin-back"></div>
+		<div class="twin" role="alertdialog" aria-modal="true" aria-labelledby="twin-title" aria-describedby="twin-what">
+			<h2 id="twin-title" class="fig">¿Cobrar otra vez?</h2>
+			<p id="twin-what">
+				Hace {since(twin.createdAt)} se cobró una cuenta igual:
+				<b>
+					{twin.receiptNo ? `N.º ${String(twin.receiptNo).padStart(4, '0')}` : 'todavía por enviar'} · {money(twin.total)}{twin.methods.length
+						? ` · ${twin.methods.map((m) => methodLabel[m]).join(' + ')}`
+						: ''}{twin.cashier ? ` · ${twin.cashier}` : ''}
+				</b>
+			</p>
+			<p class="dim">Si es el mismo cliente, no la cobres de nuevo: quedaría repetida en las cuentas y en la comisión.</p>
+			<button type="button" class="btn btn-foam" bind:this={twinFirst} onclick={keepFirst}>No cobrar, ya estaba cobrada</button>
+			<button type="button" class="btn btn-outline" onclick={chargeAnyway}>Sí, es otro cliente: cobrar</button>
+		</div>
+	{/if}
 {:else if step === 'listo' && done}
 	<DoneStep {...done} onnew={newBill} />
 {:else}
@@ -336,6 +409,44 @@
 {/if}
 
 <style>
+	.twin-back {
+		position: fixed;
+		inset: 0;
+		z-index: 40;
+		background: rgb(0 0 0 / 0.6);
+	}
+	.twin {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 41;
+		display: grid;
+		gap: 10px;
+		max-width: 560px;
+		margin: 0 auto;
+		padding: 20px var(--gutter) calc(20px + env(safe-area-inset-bottom));
+		border-top: 3px solid var(--amber);
+		border-radius: var(--r) var(--r) 0 0;
+		background: var(--wood);
+	}
+	.twin h2 {
+		font-size: var(--fs-fig-md);
+		color: var(--amber);
+	}
+	.twin p {
+		margin: 0;
+		font-size: var(--fs-sm);
+	}
+	.twin b {
+		display: block;
+		margin-top: 4px;
+		font-size: var(--fs-md);
+	}
+	.twin .dim {
+		color: var(--foam-dim);
+		font-size: var(--fs-xs);
+	}
 	.opening {
 		padding: 0 var(--gutter) 14px;
 	}

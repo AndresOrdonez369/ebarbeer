@@ -46,9 +46,11 @@ async function as(userId, sql, params = []) {
 		await db.query(`select set_config('request.jwt.claim.sub', $1, false)`, [userId]);
 		await db.exec('set role authenticated');
 	}
-	const r = await db.query(sql, params);
-	await db.exec('reset role');
-	return r.rows;
+	try {
+		return (await db.query(sql, params)).rows;
+	} finally {
+		await db.exec('reset role');
+	}
 }
 const one = async (...a) => (await as(...a))[0];
 
@@ -669,6 +671,55 @@ await test('moving a product to Servicios stops its inventory, and says so', asy
 	eq(m.map((r) => [r.kind, r.delta, r.staff_id === ids.admin]), [['off', 0, true]]);
 	await as(U.admin, `update catalog_items set kind = 'product' where id = $1`, [ids['Cera mate']]);
 	eq(await stockOf('Cera mate'), null, 'back to a product, still without inventory');
+});
+
+console.log('\nCharging the same bill twice');
+const kikeCut = JSON.stringify([{ item_id: ids['Corte'], qty: 1, barber_id: ids.kike }]);
+const cutPay = JSON.stringify([{ method: 'transfer', amount: 20000 }]);
+const charge = (id, lines, pay, repeat = false) =>
+	one(U.cashier, `select public.register_sale($1, $2, $3, null, $4) as r`, [id, lines, pay, repeat]);
+const newId = async () => (await db.query(`select gen_random_uuid() as id`)).rows[0].id;
+// Everything charged by the tests above happened "just now"; move it out of the window.
+await db.query(`update sales set created_at = created_at - interval '1 hour'`);
+let firstCut, firstNo;
+await test('the same cut for the same barber minutes later is held back, naming the first bill', async () => {
+	firstCut = await newId();
+	firstNo = (await charge(firstCut, kikeCut, cutPay)).r.receipt_no;
+	const err = await charge(await newId(), kikeCut, JSON.stringify([{ method: 'cash', amount: 20000 }])).catch((e) => e);
+	eq(err.code, 'BBR01');
+	const d = JSON.parse(err.detail);
+	eq([d.receipt_no, d.total, d.methods, d.cashier], [firstNo, 20000, ['transfer'], 'Luisa']);
+});
+await test('retrying the same bill id is still safe: it returns the first result', async () => {
+	const r = await charge(firstCut, kikeCut, cutPay);
+	eq([r.r.receipt_no, r.r.duplicate], [firstNo, true]);
+});
+await test('"es otro cliente" charges it anyway; another barber or item is never held', async () => {
+	eq((await charge(await newId(), kikeCut, cutPay, true)).r.duplicate, false);
+	eq((await charge(await newId(), JSON.stringify([{ item_id: ids['Corte'], qty: 1, barber_id: ids.dago }]), cutPay)).r.duplicate, false);
+	eq(
+		(await charge(await newId(), JSON.stringify([{ item_id: ids['Corte'], qty: 2, barber_id: ids.kike }]), JSON.stringify([{ method: 'cash', amount: 40000 }]))).r.duplicate,
+		false,
+		'two cuts is a different bill'
+	);
+});
+await test('drinks alone are held for 2 minutes, cuts for 15; a voided bill holds nothing', async () => {
+	const beer = JSON.stringify([{ item_id: ids['Cerveza artesanal'], qty: 1 }]);
+	const beerPay = JSON.stringify([{ method: 'cash', amount: 9000 }]);
+	const b1 = await newId();
+	await charge(b1, beer, beerPay);
+	eq((await charge(await newId(), beer, beerPay).catch((e) => e)).code, 'BBR01');
+	await db.query(`update sales set created_at = now() - interval '3 minutes' where id = $1`, [b1]);
+	eq((await charge(await newId(), beer, beerPay)).r.duplicate, false, 'three minutes later');
+	await db.query(`update sales set created_at = now() - interval '16 minutes' where shop_id = (select id from shops where slug='bar-beer') and created_at > now() - interval '16 minutes'`);
+	eq((await charge(await newId(), kikeCut, cutPay)).r.duplicate, false, 'sixteen minutes later');
+	const last = (await db.query(`select id from sales order by created_at desc limit 1`)).rows[0].id;
+	await as(U.cashier, `select public.void_sale($1, 'Cobrada dos veces')`, [last]);
+	eq((await charge(await newId(), kikeCut, cutPay)).r.duplicate, false, 'after voiding the first');
+});
+await test('the barber and another shop cannot charge through it', async () => {
+	await rejects(as(U.kike, `select public.register_sale(gen_random_uuid(), $1, $2, null, false)`, [kikeCut, cutPay]), 'permiso');
+	await rejects(as(U.otherAdmin, `select public.register_sale(gen_random_uuid(), $1, $2, null, false)`, [kikeCut, cutPay]), 'no disponible');
 });
 
 console.log('\nBusiness day');

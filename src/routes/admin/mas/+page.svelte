@@ -1,5 +1,6 @@
 <script lang="ts">
 	const items: { name: string; href?: string; phase?: number }[] = [
+		{ name: 'Cuentas cobradas · anular un error', href: '/admin/cuentas' },
 		{ name: 'Plantilla de la boleta de WhatsApp', href: '/admin/boleta' },
 		{ name: 'Clientes', href: '/admin/clientes' },
 		{ name: 'Datos del local', href: '/admin/local' },
