@@ -8,12 +8,17 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import BrandMark from '#lib/components/BrandMark.svelte';
 	import Plate from '#lib/components/Plate.svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import { needsSetup } from '#lib/config.js';
 	import { backend, canEnter, homeFor, initSession, session } from '#lib/session.svelte.js';
 
 	let { children } = $props();
+	let splashPhoto = $state(false);
+	const ready = (img: HTMLImageElement) => {
+		if (img.complete) splashPhoto = true;
+	};
 
 	onMount(() => {
 		if (needsSetup) return;
@@ -64,7 +69,17 @@
 		{@render children()}
 	{:else}
 		<div class="splash" aria-busy="true" aria-label="Cargando">
-			<Plate size="lg" />
+			<img
+				class="splash-photo"
+				class:ready={splashPhoto}
+				src="/photos/interior-960.webp"
+				alt=""
+				width="960"
+				height="546"
+				use:ready
+				onload={() => (splashPhoto = true)}
+			/>
+			<div class="splash-mark"><BrandMark size="lg" /></div>
 		</div>
 	{/if}
 </div>
@@ -86,7 +101,32 @@
 		display: grid;
 		place-items: center;
 		min-height: 100dvh;
+	}
+	/* The shop, dimmed to the bar's black, behind the logo while the session opens. */
+	.splash-photo {
+		position: fixed;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: 46% 42%;
+		opacity: 0;
+		transition: opacity var(--t-move) var(--ease-out);
+	}
+	.splash-photo.ready {
+		opacity: 0.28;
+	}
+	.splash-mark {
+		position: relative;
 		animation: breathe 1.6s ease-in-out infinite;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.splash-photo {
+			transition: none;
+		}
+		.splash-mark {
+			animation: none;
+		}
 	}
 	@keyframes breathe {
 		50% {

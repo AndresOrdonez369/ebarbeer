@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BrandMark from '#lib/components/BrandMark.svelte';
 	import { backend, session, signIn } from '#lib/session.svelte.js';
 	import { AppError } from '#lib/types.js';
 
@@ -6,6 +7,11 @@
 	let secret = $state('');
 	let busy = $state(false);
 	let error = $state(session.notice);
+	// The photo fades in once it has arrived, instead of painting in strips on a slow network.
+	let photoReady = $state(false);
+	const ready = (img: HTMLImageElement) => {
+		if (img.complete) photoReady = true;
+	};
 
 	async function submit(e: SubmitEvent) {
 		e.preventDefault();
@@ -31,9 +37,22 @@
 <svelte:head><title>Ingresar · Bar Beer</title></svelte:head>
 
 <main>
-	<div class="art">
-		<img src="/brand/logo.webp" alt="Bar Beer" width="720" height="524" fetchpriority="high" />
-	</div>
+	<header class="hero">
+		<img
+			class="photo"
+			class:ready={photoReady}
+			src="/photos/interior-960.webp"
+			srcset="/photos/interior-960.webp 960w, /photos/interior-1600.webp 1600w"
+			sizes="(min-width: 520px) 520px, 100vw"
+			width="1600"
+			height="910"
+			alt="Bar Beer por dentro: las sillas de barbero, los espejos con bombillos y la vitrina"
+			fetchpriority="high"
+			use:ready
+			onload={() => (photoReady = true)}
+		/>
+		<div class="mark"><BrandMark size="lg" /></div>
+	</header>
 
 	<div class="panel">
 		<h1 class="fig">Ingresa</h1>
@@ -94,26 +113,58 @@
 		display: flex;
 		flex-direction: column;
 	}
-	.art {
+	/* The shop itself, lit, pouring into the bar counter where the form sits. */
+	.hero {
 		position: relative;
+		height: clamp(280px, 46svh, 420px);
+		overflow: hidden;
+		background: var(--wood);
 	}
-	.art img {
+	.photo {
+		position: absolute;
+		inset: 0;
 		width: 100%;
-		height: auto;
-		aspect-ratio: 720 / 524;
+		height: 100%;
 		object-fit: cover;
+		object-position: 46% 42%;
+		opacity: 0;
+		transition: opacity var(--t-move) var(--ease-out);
 	}
-	/* Wood bleeds into the bar counter below. */
-	.art::after {
+	.photo.ready {
+		opacity: 1;
+	}
+	.hero::after {
 		content: '';
 		position: absolute;
-		inset: auto 0 0;
-		height: 14%;
-		background: linear-gradient(transparent, var(--bg));
+		inset: 0;
+		/* Darkest where the logo sits, so the foam E reads over the chairs. */
+		background:
+			radial-gradient(ellipse 60% 45% at 50% 82%, rgb(12 9 6 / 0.55), transparent 70%),
+			linear-gradient(
+				to bottom,
+				rgb(12 9 6 / 0.35) 0%,
+				rgb(12 9 6 / 0) 22%,
+				rgb(12 9 6 / 0.12) 40%,
+				rgb(12 9 6 / 0.62) 64%,
+				rgb(12 9 6 / 0.9) 86%,
+				var(--bg) 100%
+			);
+	}
+	.mark {
+		position: absolute;
+		z-index: 1;
+		inset: auto 0 14px;
+		display: flex;
+		justify-content: center;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.photo {
+			transition: none;
+		}
 	}
 	.panel {
 		position: relative;
-		margin-top: 4px;
+		margin-top: 10px;
 		padding: 0 var(--gutter) calc(32px + var(--safe-bottom));
 	}
 	h1 {

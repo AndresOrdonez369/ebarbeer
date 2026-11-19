@@ -566,7 +566,7 @@ Una ruta que no existe o que falla: placa BAR BEER, el estado vacío ("Esta pág
 Bloque en columna con 10 px de separación, en la pantalla de cobrada y en el detalle de una fila de Hoy (allí entre filetes y con el botón de 48 px). Con cliente: "Para <nombre> · teléfono" en body small espuma apagada con el nombre en espuma y el enlace subrayado "Cambiar" a la derecha; el botón espuma "Enviar boleta por WhatsApp" con icono de chat ("Reenviar boleta" si ya se abrió); tras abrirlo, "Abierta en WhatsApp a las … · confirma allá que se envió" en 0.75rem espuma apagada. Sin cliente: el botón de contorno "Agregar WhatsApp para enviar la boleta" (en la pantalla de cobrada) o directamente el formulario con dos campos de 52 px y "Guardar número" en contorno espuma. Al pie, "Ver la boleta como la ve el cliente" como enlace en espuma apagada.
 
 ### Boleta pública
-La boleta que abre el cliente desde WhatsApp: placa BAR BEER grande centrada y debajo la hoja de la cuenta (madera, filete de 1 px, borde superior ámbar de 3 px, esquinas rectas, padding 18/16 px). Cabecera "Boleta N.º 0000" en cifra 1.75rem con local, fecha y hora en espuma apagada, cerrada por una perforación discontinua en filete fuerte; líneas de al menos 52 px separadas por filete discontinuo, con "Te atendió <barbero>" en 0.75rem; total en cifra 2.5rem 900 con "Total" en Label y "Pagado con …" debajo a la derecha. Anulada: importes tachados en espuma apagada, sello ANULADA en la fila del total y nota en texto de error. Fuera de la hoja, una jarra grande llena y quieta sobre "Gracias, <nombre>" en cifra 1.75rem, y la línea legal en 0.75rem espuma apagada.
+La boleta que abre el cliente desde WhatsApp: la portada con la foto del local y el sello de marca (ver Fotos del local) y debajo la hoja de la cuenta (madera, filete de 1 px, borde superior ámbar de 3 px, esquinas rectas, padding 18/16 px). Cabecera "Boleta N.º 0000" en cifra 1.75rem con local, fecha y hora en espuma apagada, cerrada por una perforación discontinua en filete fuerte; líneas de al menos 52 px separadas por filete discontinuo, con "Te atendió <barbero>" en 0.75rem; total en cifra 2.5rem 900 con "Total" en Label y "Pagado con …" debajo a la derecha. Anulada: importes tachados en espuma apagada, sello ANULADA en la fila del total y nota en texto de error. Fuera de la hoja, una jarra grande llena y quieta sobre "Gracias, <nombre>" en cifra 1.75rem, y la línea legal en 0.75rem espuma apagada.
 
 ### Libro de Hoy
 - **Fila de cuenta:** botón de ancho completo, 12 px arriba y abajo, filete inferior de 1 px. Número y hora en Name 0.75rem espuma apagada; resumen en body small con elipsis; total en cifra 1.75rem a la derecha; chevrón SVG de 20 px que gira 90° al abrir; método o estado en 0.75rem debajo.
@@ -674,6 +674,17 @@ Las tres pantallas del barbero (Hoy, Historial, Metas) solo leen: nada se cobra,
 ### Placa BAR BEER
 La hoja del logo: segmentos negro "BAR", rojo con la jarra y azul "BEER", texto blanco 700 espaciado 0.16em, borde cromo de 2 px, inclinada -14°. Tamaño mediano en la cabecera y grande (texto de 22 px) en la pantalla de carga. Su negro y sus medidas en px reproducen el logo y no se tokenizan.
 
+### Sello de marca (emblema + placa)
+El logo armado para ir sobre una foto: la E con barba en espuma (`static/brand/emblema.webp`, recortada del logo del cliente con una máscara de luminancia, sin generar) sobre la placa BAR BEER grande, centrados y a 10 px. La E mide 72 px (96 px en grande) y lleva una sombra suave (0 2px 6px negro al 75 %) que la separa de la foto. Es una sola imagen para lectores de pantalla ("Bar Beer"). Se reemplaza cuando llegue el logo en vector.
+
+### Fotos del local
+Fotos reales de la barbería, enviadas por el cliente (originales en `brand-source/fotos/`, versiones web en `static/photos/` con su procedencia en un `.json` al lado). Solo van donde se entra o se sale, nunca donde se trabaja: la caja, el barbero y la administración no llevan fotos.
+- **Ingreso:** el interior panorámico arriba, a todo lo ancho de la columna, de 280 a 420 px de alto (46 % de la pantalla), recortado al centro de los espejos y las sillas. Encima, un degradado que se oscurece hacia abajo hasta el negro de barra, con un óvalo más oscuro donde va el sello de marca grande, centrado a 14 px del pie de la foto. El formulario sigue debajo como antes.
+- **Pantalla de carga:** el mismo interior a pantalla completa al 28 % sobre el negro de barra, con el sello de marca grande al centro respirando como antes.
+- **Boleta pública:** el interior como portada de 236 px a sangre, con el mismo degradado y el sello de marca mediano encima; la hoja de la cuenta empieza 18 px debajo. Tras "Gracias", entre un filete, "Vuelve pronto" en cifra 1.25rem y una fila con desplazamiento horizontal de las tres fotos verticales (fachada, silla con barco, silla con repisa): cada una al 62 % del ancho, proporción 9:14, filete de 1 px, esquinas de 4 px, 8 px de separación, la siguiente asomando para que se lea que se desliza; encaja al soltar, se enfoca con teclado y lleva barra de desplazamiento fina en filete fuerte. Cargan solo al llegar a ellas.
+- **Carga y movimiento:** cada foto aparece con un fundido de 450 ms cuando terminó de llegar, para no pintarse a franjas; con movimiento reducido aparece sin fundido. Ninguna foto se mueve en reposo.
+- **Privacidad:** la placa de la moto de la fachada va difuminada en la versión web.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -715,4 +726,5 @@ La hoja del logo: segmentos negro "BAR", rojo con la jarra y azul "BEER", texto 
 - **Don't** usar el recuadro rojo para confirmar algo que no destruye (cerrar la caja, marcar un pago); el rojo confirma solo lo que quita.
 - **Don't** servir en cerveza (jarra o barra de nivel) una comparación de dinero vendido; la cerveza es progreso hacia una meta.
 - **Don't** dejar navegar el selector de periodo hacia el futuro; la flecha siguiente se apaga en el periodo en curso.
+- **Don't** poner fotos del local en pantallas de trabajo (caja, barbero, administración); van en el ingreso, la pantalla de carga y la boleta del cliente.
 - **Don't** usar contorno discontinuo ni ámbar en la nota de caja ya cerrada; lo cerrado está asentado y la nota no pide actuar.

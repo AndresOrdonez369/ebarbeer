@@ -1,8 +1,8 @@
 <!-- The customer's receipt, opened from the WhatsApp link. Public, no account, no phone shown. -->
 <script lang="ts">
 	import { page } from '$app/state';
+	import BrandMark from '#lib/components/BrandMark.svelte';
 	import Mug from '#lib/components/Mug.svelte';
-	import Plate from '#lib/components/Plate.svelte';
 	import { amount, methodLabel, money } from '#lib/format.js';
 	import { backend } from '#lib/session.svelte.js';
 	import type { PublicReceipt } from '#lib/types.js';
@@ -31,6 +31,17 @@
 			: ''
 	);
 	const methods = $derived(receipt ? [...new Set(receipt.payments.map((p) => methodLabel[p.method]))].join(' + ') : '');
+
+	let coverReady = $state(false);
+	const ready = (img: HTMLImageElement) => {
+		if (img.complete) coverReady = true;
+	};
+	// The shop, for the customer to come back to.
+	const photos = [
+		{ src: '/photos/fachada.webp', w: 621, h: 1120, alt: 'La entrada de Bar Beer: fachada verde con el letrero y la calavera de toro sobre la puerta' },
+		{ src: '/photos/silla-barco.webp', w: 618, h: 1121, alt: 'Una silla de barbero de cuero bajo un barco de madera, junto a guitarras colgadas' },
+		{ src: '/photos/silla-repisa.webp', w: 720, h: 980, alt: 'Una silla de barbero frente al espejo con bombillos y una repisa de figuras y botellas' }
+	];
 </script>
 
 <svelte:head>
@@ -39,7 +50,21 @@
 </svelte:head>
 
 <main>
-	<div class="brand"><Plate size="lg" /></div>
+	<header class="cover">
+		<img
+			class="photo"
+			class:ready={coverReady}
+			src="/photos/interior-960.webp"
+			srcset="/photos/interior-960.webp 960w, /photos/interior-1600.webp 1600w"
+			sizes="(min-width: 520px) 520px, 100vw"
+			width="1600"
+			height="910"
+			alt="Bar Beer por dentro: las sillas de barbero, los espejos con bombillos y la vitrina"
+			use:ready
+			onload={() => (coverReady = true)}
+		/>
+		<div class="mark"><BrandMark /></div>
+	</header>
 
 	{#if status === 'ok' && receipt}
 		<article class="ticket" class:void={receipt.status === 'void'} aria-labelledby="r-title">
@@ -76,6 +101,17 @@
 			<Mug count={1} goal={1} />
 			<p class="fig">{receipt.customer ? `Gracias, ${receipt.customer}` : 'Gracias por venir'}</p>
 		</div>
+
+		<section class="again" aria-labelledby="again-title">
+			<h2 id="again-title" class="fig">Vuelve pronto</h2>
+			<!-- A scrolling row must take keyboard focus so it can be scrolled without a pointer. -->
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+			<ul class="strip" aria-label="Fotos del local" tabindex="0">
+				{#each photos as p (p.src)}
+					<li><img src={p.src} width={p.w} height={p.h} alt={p.alt} loading="lazy" decoding="async" /></li>
+				{/each}
+			</ul>
+		</section>
 		<p class="legal">Comprobante de pago. No es una factura electrónica.</p>
 	{:else if status === 'loading'}
 		<div class="sk" aria-busy="true" aria-label="Cargando la boleta"></div>
@@ -95,12 +131,48 @@
 <style>
 	main {
 		min-height: 100dvh;
-		padding: 28px var(--gutter) calc(32px + var(--safe-bottom));
+		padding: 0 var(--gutter) calc(32px + var(--safe-bottom));
 	}
-	.brand {
+	/* The shop at the top of the receipt, fading into the counter the ticket lies on. */
+	.cover {
+		position: relative;
+		height: 236px;
+		margin: 0 calc(-1 * var(--gutter)) 18px;
+		overflow: hidden;
+		background: var(--wood);
+	}
+	.photo {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: 46% 40%;
+		opacity: 0;
+		transition: opacity var(--t-move) var(--ease-out);
+	}
+	.photo.ready {
+		opacity: 1;
+	}
+	.cover::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background:
+			radial-gradient(ellipse 60% 55% at 50% 84%, rgb(12 9 6 / 0.55), transparent 70%),
+			linear-gradient(to bottom, rgb(12 9 6 / 0.25) 0%, rgb(12 9 6 / 0.1) 30%, rgb(12 9 6 / 0.65) 62%, rgb(12 9 6 / 0.9) 86%, var(--bg) 100%);
+	}
+	.mark {
+		position: absolute;
+		z-index: 1;
+		inset: auto 0 10px;
 		display: flex;
 		justify-content: center;
-		margin-bottom: 24px;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.photo {
+			transition: none;
+		}
 	}
 	.ticket {
 		position: relative;
@@ -110,24 +182,24 @@
 		border-top: 3px solid var(--amber);
 		border-radius: 0;
 	}
-	header {
+	.ticket header {
 		padding-bottom: 12px;
 		border-bottom: 1px dashed var(--line-strong);
 	}
 	h1 {
 		font-size: var(--fs-fig-md);
 	}
-	header p {
+	.ticket header p {
 		margin-top: 4px;
 		font-size: var(--fs-sm);
 		color: var(--foam-dim);
 	}
-	ul {
+	.ticket ul {
 		list-style: none;
 		margin: 0;
 		padding: 0;
 	}
-	li {
+	.ticket li {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -146,7 +218,7 @@
 		font-size: var(--fs-xs);
 		color: var(--foam-dim);
 	}
-	li .fig {
+	.ticket li .fig {
 		font-size: var(--fs-fig-sm);
 	}
 	.total {
@@ -201,8 +273,50 @@
 	.thanks .fig {
 		font-size: var(--fs-fig-md);
 	}
+	.again {
+		margin: 36px calc(-1 * var(--gutter)) 0;
+		padding-top: 16px;
+		border-top: 1px solid var(--line);
+	}
+	.again h2 {
+		padding: 0 var(--gutter);
+		font-size: var(--fs-fig-sm);
+	}
+	/* Portrait photos side by side; the next one peeks in so the row reads as swipeable. */
+	.strip {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: 62%;
+		gap: 8px;
+		margin: 10px 0 0;
+		padding: 0 var(--gutter) 6px;
+		list-style: none;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scroll-snap-type: x mandatory;
+		scroll-padding: 0 var(--gutter);
+		scrollbar-width: thin;
+		scrollbar-color: var(--line-strong) transparent;
+	}
+	.strip:focus-visible {
+		outline: 2px solid var(--amber);
+		outline-offset: 2px;
+	}
+	.strip li {
+		scroll-snap-align: start;
+	}
+	.strip img {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 9 / 14;
+		object-fit: cover;
+		border: 1px solid var(--line);
+		border-radius: var(--r);
+		background: var(--wood);
+	}
 	.legal {
-		margin-top: 10px;
+		margin-top: 18px;
 		text-align: center;
 		font-size: var(--fs-xs);
 		color: var(--foam-dim);

@@ -22,3 +22,6 @@ supabase/.branches
 
 # Sales film render (the project that makes it is in video/).
 /bar-beer-presentacion.mp4
+
+# Original shop photos from the client (the facade shows a license plate); the web versions in static/photos are blurred where needed.
+/brand-source/fotos/
