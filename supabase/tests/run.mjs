@@ -595,6 +595,82 @@ await test('the closing keeps its base; a closed day cannot change it', async ()
 	await rejects(as(U.admin, `select public.open_register(1000)`), 'ya está cerrada');
 });
 
+console.log('\nInventory');
+const stockOf = async (name) => (await db.query(`select stock from catalog_items where id = $1`, [ids[name]])).rows[0].stock;
+const sellBeers = async (qty) => {
+	const id = (await db.query(`select gen_random_uuid() as id`)).rows[0].id;
+	await as(U.cashier, `select public.register_sale($1, $2, $3)`, [
+		id,
+		JSON.stringify([{ item_id: ids['Cerveza'], qty }]),
+		JSON.stringify([{ method: 'cash', amount: 6000 * qty }])
+	]);
+	return id;
+};
+let beforeTracking;
+await test('items start without inventory; selling them moves nothing', async () => {
+	eq(await stockOf('Cerveza'), null);
+	beforeTracking = await sellBeers(1);
+	eq((await db.query(`select count(*)::int as n from stock_moves`)).rows[0].n, 0);
+});
+let beerSale;
+await test('a count starts the inventory and every bill takes its units out', async () => {
+	eq((await one(U.admin, `select public.adjust_stock($1, 'count', 10) as s`, [ids['Cerveza']])).s, 10);
+	beerSale = await sellBeers(2);
+	eq(await stockOf('Cerveza'), 8);
+	const m = await one(U.admin, `select kind, delta, stock_after, staff_id from stock_moves where sale_id = $1`, [beerSale]);
+	eq([m.kind, m.delta, m.stock_after, m.staff_id === ids.luisa], ['sale', -2, 8, true]);
+});
+await test('a void puts the units back once; a bill from before the inventory puts nothing back', async () => {
+	await as(U.cashier, `select public.void_sale($1, 'Error de prueba')`, [beerSale]);
+	eq(await stockOf('Cerveza'), 10);
+	await as(U.cashier, `select public.void_sale($1, 'Otra vez')`, [beerSale]);
+	eq(await stockOf('Cerveza'), 10, 'voiding twice');
+	await as(U.cashier, `select public.void_sale($1, 'Error de prueba')`, [beforeTracking]);
+	eq(await stockOf('Cerveza'), 10, 'never taken out, never put back');
+	const v = await one(U.admin, `select delta, staff_id from stock_moves where sale_id = $1 and kind = 'void'`, [beerSale]);
+	eq([v.delta, v.staff_id === ids.luisa], [2, true]);
+});
+await test('arrivals add, counts correct, and each one is recorded with who and why', async () => {
+	eq((await one(U.admin, `select public.adjust_stock($1, 'in', 24, 'Pedido del jueves') as s`, [ids['Cerveza']])).s, 34);
+	eq((await one(U.admin, `select public.adjust_stock($1, 'count', 31, 'Se rompieron 3') as s`, [ids['Cerveza']])).s, 31);
+	const rows = await as(U.admin, `select kind, delta, stock_after, note from stock_moves where item_id = $1 and kind in ('in', 'count') order by created_at desc, kind limit 2`, [ids['Cerveza']]);
+	eq(rows.map((r) => [r.kind, r.delta, r.stock_after, r.note]).sort(), [['count', -3, 31, 'Se rompieron 3'], ['in', 24, 34, 'Pedido del jueves']]);
+	eq((await one(U.admin, `select public.adjust_stock($1, 'in', 5) as s`, [ids['Cera mate']])).s, 5, 'an arrival starts an inventory at zero');
+});
+await test('the register never refuses a sale over the count: it goes negative', async () => {
+	await as(U.admin, `select public.adjust_stock($1, 'count', 1)`, [ids['Cerveza']]);
+	await sellBeers(3);
+	eq(await stockOf('Cerveza'), -2);
+});
+await test('only the admin moves stock, never by hand on the table, never on a service', async () => {
+	await rejects(as(U.cashier, `select public.adjust_stock($1, 'in', 5)`, [ids['Cerveza']]), 'permiso');
+	await rejects(as(U.kike, `select public.adjust_stock($1, 'in', 5)`, [ids['Cerveza']]), 'permiso');
+	await rejects(as(U.admin, `select public.adjust_stock($1, 'in', 5)`, [ids['Corte']]), 'servicios');
+	await rejects(as(U.admin, `select public.adjust_stock($1, 'in', 0)`, [ids['Cerveza']]), 'cuántas unidades llegaron');
+	await rejects(as(U.admin, `select public.adjust_stock($1, 'count', -1)`, [ids['Cerveza']]), 'cuántas unidades hay');
+	await rejects(as(U.admin, `select public.adjust_stock($1, 'robar', 1)`, [ids['Cerveza']]), 'no válido');
+	await rejects(as(U.admin, `update catalog_items set stock = 999 where id = $1`, [ids['Cerveza']]), 'permission denied');
+	await rejects(as(U.otherAdmin, `select public.adjust_stock($1, 'in', 5)`, [ids['Cerveza']]), 'no encontrado');
+	await as(U.admin, `update catalog_items set stock_min = 6 where id = $1`, [ids['Cerveza']]);
+	eq((await one(U.cashier, `select stock, stock_min from catalog_items where id = $1`, [ids['Cerveza']])), { stock: -2, stock_min: 6 }, 'the register reads what is left');
+	eq((await as(U.cashier, `select count(*)::int as n from stock_moves`))[0].n, 0, 'the register does not read the moves');
+	eq((await as(U.otherAdmin, `select count(*)::int as n from stock_moves`))[0].n, 0, 'another shop sees none');
+});
+await test('stopping the inventory clears the figure and is recorded', async () => {
+	eq((await one(U.admin, `select public.adjust_stock($1, 'off') as s`, [ids['Cera mate']])).s, null);
+	eq(await stockOf('Cera mate'), null);
+	eq((await one(U.admin, `select kind from stock_moves where item_id = $1 order by created_at desc limit 1`, [ids['Cera mate']])).kind, 'off');
+});
+await test('moving a product to Servicios stops its inventory, and says so', async () => {
+	await as(U.admin, `select public.adjust_stock($1, 'count', 4)`, [ids['Cera mate']]);
+	await as(U.admin, `update catalog_items set kind = 'service' where id = $1`, [ids['Cera mate']]);
+	eq(await stockOf('Cera mate'), null);
+	const m = await as(U.admin, `select kind, delta, staff_id from stock_moves where item_id = $1 and note = 'Pasó a servicios'`, [ids['Cera mate']]);
+	eq(m.map((r) => [r.kind, r.delta, r.staff_id === ids.admin]), [['off', 0, true]]);
+	await as(U.admin, `update catalog_items set kind = 'product' where id = $1`, [ids['Cera mate']]);
+	eq(await stockOf('Cera mate'), null, 'back to a product, still without inventory');
+});
+
 console.log('\nBusiness day');
 await test('1:30 a.m. in Bogotá belongs to the previous day', async () => {
 	const r = (await db.query(`select public.business_date_at(id, '2026-11-11 01:30-05') as d from shops where slug='bar-beer'`)).rows[0];

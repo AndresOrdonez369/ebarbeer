@@ -41,6 +41,23 @@ export interface CatalogItem {
 	countsAsCut: boolean;
 	active?: boolean;
 	sortOrder?: number;
+	/** Units left; null when the item keeps no inventory. Can go below zero. */
+	stock?: number | null;
+	/** Warn when stock falls to this or below. */
+	stockMin?: number;
+}
+
+export type StockMoveKind = 'sale' | 'void' | 'in' | 'count' | 'off';
+
+/** One change to an item's stock, newest first. */
+export interface StockMove {
+	at: string;
+	kind: StockMoveKind;
+	delta: number;
+	after: number | null;
+	receiptNo: number | null;
+	by: string | null;
+	note: string | null;
 }
 
 export interface ItemInput {
@@ -52,6 +69,9 @@ export interface ItemInput {
 	countsAsCut: boolean;
 	active: boolean;
 	sortOrder: number;
+	stockMin?: number;
+	/** Only when creating: the units there are now, to start its inventory. */
+	stock?: number | null;
 }
 
 export interface StaffMember {
@@ -399,6 +419,10 @@ export interface Backend {
 	/** Admin: every item, inactive included, in register order. */
 	catalogAll(): Promise<CatalogItem[]>;
 	saveItem(input: ItemInput): Promise<CatalogItem>;
+	/** Admin: units that arrived (in), a count that replaces the figure (count), or stop keeping inventory (off). Returns the new stock. */
+	adjustStock(itemId: string, kind: 'in' | 'count' | 'off', qty?: number | null, note?: string | null): Promise<number | null>;
+	/** Admin: the latest changes to an item's stock, newest first. */
+	stockMoves(itemId: string): Promise<StockMove[]>;
 	customers(query: string): Promise<CustomerStat[]>;
 	shopSettings(): Promise<ShopSettings>;
 	saveShopSettings(settings: ShopSettings): Promise<void>;

@@ -81,11 +81,14 @@ check(owed > 0 && items.length > 0, `owed today ${owed}, ${items.length} lines o
 check(t.includes('Cortes') && t.includes('Servicios') && t.includes('Vendió'), 'clear figures: cuts, services, sold');
 check(t.includes('Día de 5') && t.includes('Cumplido hoy'), 'a day bonus met today is added to today');
 await shot('2-kike-hoy');
+const cutsIn = (s) => Number(/Cortes\s*(\d+)/.exec(s)?.[1] ?? 0);
+const cutsToday = cutsIn(t);
 await tap('Semana');
 await sleep(700);
 t = await text();
-// The demo shop is closed on Mondays, so on a Monday or Tuesday this week has no earlier night to list.
-const pastNight = ![1, 2].includes(new Date().getDay());
+// If he worked an earlier night this week, that night was paid and is listed. The example data
+// gives him days off (and the shop closes on Mondays), so some weeks have only today.
+const pastNight = cutsIn(t) > cutsToday;
 check(t.includes('Esta semana') && (!pastNight || t.includes('Pagos')), 'week view lists the nights he was already paid');
 await tap('Mes');
 await sleep(700);

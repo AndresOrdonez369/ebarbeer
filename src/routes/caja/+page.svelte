@@ -9,6 +9,7 @@
 	import { charge, outbox } from '#lib/outbox.svelte.js';
 	import { backend } from '#lib/session.svelte.js';
 	import { normalizePhone } from '#lib/receipt.js';
+	import { stockState, stockWords } from '#lib/stock.js';
 	import {
 		AppError,
 		type CatalogItem,
@@ -20,7 +21,8 @@
 
 	const board = live(() => backend.dayBoard());
 	const totals = live(() => backend.dayTotals());
-	const catalog = once(() => backend.catalog());
+	// Live, so what is left of each drink or product follows every sale.
+	const catalog = live(() => backend.catalog());
 	// Today's drawer: asks for the base until it is opened, and warns once it was already counted.
 	const cash = once(async () => backend.cashDay(await backend.businessDate()));
 	let openedNow = $state(false);
@@ -260,8 +262,12 @@
 			{#if items.length}
 				<div class="grid" role="tabpanel">
 					{#each items as item (item.id)}
+						{@const left = stockState(item)}
 						<button type="button" class="item" onclick={() => add(item)}>
-							<span class="name">{item.name}</span>
+							<span class="name">
+								{item.name}
+								{#if left === 'low' || left === 'out'}<small class="left" class:out={left === 'out'}>{stockWords(item.stock!)}</small>{/if}
+							</span>
 							<span class="fig price">{amount(item.price)}</span>
 						</button>
 					{/each}
@@ -444,6 +450,16 @@
 		font-weight: 700;
 		font-size: var(--fs-sm);
 		line-height: 1.2;
+	}
+	.item .left {
+		display: block;
+		margin-top: 2px;
+		font-size: var(--fs-xs);
+		font-weight: 700;
+		color: var(--amber);
+	}
+	.item .left.out {
+		color: var(--danger-text);
 	}
 	.price {
 		font-size: var(--fs-fig-sm);

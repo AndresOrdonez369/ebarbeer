@@ -18,6 +18,7 @@ import {
 	type PayMethod,
 	type PayoutMethod,
 	type Settlement,
+	type StockMove,
 	type Profile,
 	type ReportLine,
 	type ReportSummary,
@@ -62,6 +63,22 @@ const seedItems: CatalogItem[] = [
 	active: true,
 	sortOrder: i
 }));
+// Example inventory: [units left, warn at]. Water and beard oil are about to run out; services and
+// the piercing keep none.
+const seedStock: Record<string, [number, number]> = {
+	Cerveza: [48, 12],
+	'Cerveza artesanal': [18, 6],
+	Gaseosa: [24, 6],
+	Agua: [4, 6],
+	'Cera mate': [9, 3],
+	'Aceite de barba': [2, 2]
+};
+for (const it of seedItems) {
+	const s = seedStock[it.name];
+	it.stock = s ? s[0] : null;
+	it.stockMin = s ? s[1] : 0;
+}
+type DemoMove = StockMove & { itemId: string; saleId: string | null };
 
 // The demo's live state (assigned below from sessionStorage or a fresh example day).
 let st = undefined as unknown as DemoState;
@@ -122,6 +139,8 @@ interface DemoState {
 	closings: Closing[];
 	/** Openings made in this demo; older days opened with DEMO_BASE. Missing in demos saved before it existed. */
 	openings?: Opening[];
+	/** Stock changes made in this demo; each item also shows a synthetic opening count. */
+	stockMoves?: DemoMove[];
 	/** Payments made at the register in this demo; past days are paid by the synthetic history. */
 	settlements: DemoSettlement[];
 	voids: Record<string, { at: string; by: string }>;
@@ -247,6 +266,7 @@ try {
 	/* keep the example names */
 }
 st.openings ??= [];
+st.stockMoves ??= [];
 lineSeq = st.lines.length + 1;
 function persist() {
 	try {
@@ -781,6 +801,12 @@ export function createDemoBackend(): Backend {
 			}
 			const receiptNo = st.nextReceipt++;
 			const receiptToken = token();
+			// Like the server: tracked items lose the units sold, even below zero.
+			for (const l of recLines) {
+				if (l.it.stock == null) continue;
+				l.it.stock -= l.qty;
+				st.stockMoves!.push({ itemId: l.it.id, saleId: id, at, kind: 'sale', delta: -l.qty, after: l.it.stock, receiptNo, by: current?.displayName ?? null, note: null });
+			}
 			st.sales.unshift({
 				id,
 				receiptNo,
@@ -815,6 +841,12 @@ export function createDemoBackend(): Backend {
 			s.voidReason = reason.trim();
 			st.voids[id] = { at: new Date().toISOString(), by: current?.displayName ?? 'Caja' };
 			for (const l of st.lines) if (l.saleId === id) l.status = 'void';
+			for (const m of st.stockMoves!.filter((x) => x.saleId === id && x.kind === 'sale')) {
+				const it = itemById(m.itemId);
+				if (!it || it.stock == null || st.stockMoves!.some((x) => x.saleId === id && x.itemId === m.itemId && x.kind === 'void')) continue;
+				it.stock -= m.delta;
+				st.stockMoves!.push({ ...m, at: new Date().toISOString(), kind: 'void', delta: -m.delta, after: it.stock, by: current?.displayName ?? null });
+			}
 			persist();
 			notify();
 		},
@@ -1009,16 +1041,75 @@ export function createDemoBackend(): Backend {
 				commissionPct: input.commissionPct,
 				countsAsCut: input.kind === 'service' ? input.countsAsCut : false,
 				active: input.active,
-				sortOrder: input.sortOrder
+				sortOrder: input.sortOrder,
+				stockMin: input.kind === 'service' ? 0 : Math.max(0, Math.round(input.stockMin ?? 0))
 			};
 			let it = input.id ? st.items.find((i) => i.id === input.id) : undefined;
-			if (it) Object.assign(it, fields);
-			else {
-				it = { id: `d-item-${Date.now().toString(36)}`, ...fields };
+			if (it) {
+				// Moved to Servicios: services keep no inventory.
+				if (input.kind === 'service' && it.stock != null) {
+					st.stockMoves!.push({ itemId: it.id, saleId: null, at: new Date().toISOString(), kind: 'off', delta: 0, after: null, receiptNo: null, by: current?.displayName ?? null, note: 'Pasó a servicios' });
+					it.stock = null;
+				}
+				Object.assign(it, fields);
+			} else {
+				const start = input.kind !== 'service' && input.stock != null ? Math.max(0, Math.round(input.stock)) : null;
+				it = { id: `d-item-${Date.now().toString(36)}`, ...fields, stock: start };
 				st.items.push(it);
+				if (start != null)
+					st.stockMoves!.push({ itemId: it.id, saleId: null, at: new Date().toISOString(), kind: 'count', delta: start, after: start, receiptNo: null, by: current?.displayName ?? null, note: null });
 			}
 			persist();
 			return { ...it };
+		},
+
+		async adjustStock(itemId, kind, qty = null, note = null) {
+			await wait(200);
+			if (current?.role !== 'admin') throw new AppError('No tienes permiso para esta acción');
+			const it = itemById(itemId);
+			if (!it) throw new AppError('Producto no encontrado');
+			if (it.kind === 'service') throw new AppError('Los servicios no llevan inventario');
+			const before = it.stock ?? null;
+			let after: number | null;
+			if (kind === 'in') {
+				if (qty == null || !Number.isInteger(qty) || qty < 1 || qty > 100000) throw new AppError('Escribe cuántas unidades llegaron');
+				after = (before ?? 0) + qty;
+			} else if (kind === 'count') {
+				if (qty == null || !Number.isInteger(qty) || qty < 0 || qty > 1000000) throw new AppError('Escribe cuántas unidades hay');
+				after = qty;
+			} else {
+				if (before == null) return null;
+				after = null;
+			}
+			it.stock = after;
+			st.stockMoves!.push({
+				itemId,
+				saleId: null,
+				at: new Date().toISOString(),
+				kind,
+				delta: kind === 'off' ? 0 : (after ?? 0) - (before ?? 0),
+				after,
+				receiptNo: null,
+				by: current.displayName,
+				note: note?.trim().slice(0, 120) || null
+			});
+			persist();
+			notify();
+			return after;
+		},
+
+		async stockMoves(itemId) {
+			await wait(120);
+			const it = itemById(itemId);
+			const own = st.stockMoves!.filter((m) => m.itemId === itemId).sort((a, b) => b.at.localeCompare(a.at));
+			const out: StockMove[] = own.map(({ itemId: _i, saleId: _s, ...m }) => ({ ...m }));
+			// The example inventory was counted the morning before the demo started.
+			const seeded = it && seedStock[it.name] && !own.some((m) => m.kind === 'count' && m.note == null && m.receiptNo == null && m.by == null);
+			if (seeded && it.stock != null) {
+				const start = it.stock - own.reduce((s, m) => s + m.delta, 0);
+				out.push({ at: new Date(addDays(todayIso(), -1) + 'T09:10:00').toISOString(), kind: 'count', delta: start, after: start, receiptNo: null, by: nameOfId('d-admin') ?? 'Esteban', note: 'Conteo inicial' });
+			}
+			return out;
 		},
 
 		async customers(query) {

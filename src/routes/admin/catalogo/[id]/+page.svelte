@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { parsePesos } from '#lib/bill.js';
+	import StockPanel from '#lib/components/StockPanel.svelte';
 	import { amount } from '#lib/format.js';
 	import { backend } from '#lib/session.svelte.js';
 	import { AppError, type CatalogItem, type ItemKind } from '#lib/types.js';
@@ -21,6 +22,9 @@
 	let pctText = $state('50');
 	let countsAsCut = $state(false);
 	let active = $state(true);
+	// Drinks and products: units to start the inventory with (new items) and when to warn.
+	let stockText = $state('');
+	let minText = $state('5');
 	let busy = $state(false);
 	let msg = $state<{ ok: boolean; text: string } | null>(null);
 
@@ -46,7 +50,10 @@
 		pctText = String(it.commissionPct);
 		countsAsCut = it.countsAsCut;
 		active = it.active !== false;
+		minText = String(it.stockMin ?? 0);
 	}
+
+	const digits = (v: string) => v.replace(/[^0-9]/g, '').slice(0, 5);
 
 	const siblings = $derived(all.filter((i) => i.kind === kind).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)));
 	const position = $derived(item ? siblings.findIndex((i) => i.id === item!.id) : -1);
@@ -59,6 +66,8 @@
 		if (!name.trim()) return (msg = { ok: false, text: 'Escribe el nombre.' });
 		if (!price) return (msg = { ok: false, text: 'Escribe el precio.' });
 		if (!(pct >= 0 && pct <= 100)) return (msg = { ok: false, text: 'La comisión va de 0 a 100 %.' });
+		const stockMin = kind === 'service' ? 0 : Number(minText || '0');
+		const stock = isNew && kind !== 'service' && stockText ? parsePesos(stockText) : null;
 		busy = true;
 		try {
 			const maxOrder = Math.max(-1, ...all.map((i) => i.sortOrder ?? 0));
@@ -70,12 +79,15 @@
 				commissionPct: pct,
 				countsAsCut: kind === 'service' && countsAsCut,
 				active,
-				sortOrder: item && item.kind === kind ? (item.sortOrder ?? 0) : maxOrder + 1
+				sortOrder: item && item.kind === kind ? (item.sortOrder ?? 0) : maxOrder + 1,
+				stockMin,
+				stock
 			});
 			all = await backend.catalogAll();
 			if (isNew) {
 				await goto(`/admin/catalogo/${saved.id}`, { replaceState: true });
-				msg = { ok: true, text: 'Agregado. Ya sale en la caja.' };
+				msg = { ok: true, text: stock != null ? `Agregado con ${stock} en inventario. Ya sale en la caja.` : 'Agregado. Ya sale en la caja.' };
+				stockText = '';
 			} else {
 				msg = { ok: true, text: active ? 'Guardado. Aplica desde el próximo cobro.' : 'Guardado y oculto en la caja.' };
 			}
@@ -162,6 +174,33 @@
 			<p class="hint">
 				{#if kind === 'service'}Lo que gana el barbero que hace el servicio. Cada barbero puede tener su propio porcentaje en Equipo.{:else}Pon 0 si nadie gana comisión por venderlo.{/if}
 			</p>
+			{#if kind === 'service' && item?.stock != null}
+				<p class="hint warn">Los servicios no llevan inventario: al guardar se borran sus {item.stock} unidades. El historial se conserva.</p>
+			{/if}
+			{#if kind !== 'service' && (isNew || item?.stock != null)}
+				<div class="row2">
+					{#if isNew}
+						<label class="field">
+							<span class="label">Cantidad en inventario</span>
+							<input
+								class="input"
+								inputmode="numeric"
+								value={stockText}
+								oninput={(e) => {
+									const n = parsePesos(e.currentTarget.value);
+									stockText = /[0-9]/.test(e.currentTarget.value) ? amount(n) : '';
+								}}
+								placeholder="Opcional"
+							/>
+						</label>
+					{/if}
+					<label class="field">
+						<span class="label">Avisar cuando queden</span>
+						<input class="input" inputmode="numeric" value={minText} oninput={(e) => (minText = digits(e.currentTarget.value))} placeholder="5" />
+					</label>
+				</div>
+				{#if isNew}<p class="hint">Escribe cuántas hay y cada venta las descuenta sola. Vacío: sin inventario.</p>{/if}
+			{/if}
 			{#if kind === 'service'}
 				<label class="check">
 					<input type="checkbox" bind:checked={countsAsCut} />
@@ -177,6 +216,16 @@
 			<p class="form-msg" class:ok={msg?.ok} class:err={msg && !msg.ok} role="status">{msg?.text ?? ''}</p>
 			<button class="btn btn-foam" type="submit" disabled={busy}>{busy ? 'Guardando…' : isNew ? 'Agregar' : 'Guardar'}</button>
 		</form>
+
+		{#if item && item.kind !== 'service' && !isNew}
+			<StockPanel
+				{item}
+				onchange={(stock) => {
+					item = { ...item!, stock };
+					all = all.map((i) => (i.id === item!.id ? { ...i, stock } : i));
+				}}
+			/>
+		{/if}
 
 		{#if item && item.active !== false && siblings.length > 1}
 			<section class="block">
@@ -213,6 +262,10 @@
 		font-size: var(--fs-xs);
 		color: var(--foam-dim);
 		max-width: 50ch;
+	}
+	.hint.warn {
+		color: var(--amber);
+		font-weight: 700;
 	}
 	.moves {
 		margin-top: 10px;

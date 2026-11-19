@@ -26,6 +26,7 @@ const screens = [
 	['admin', '/admin/equipo/d-dago'],
 	['admin', '/admin/catalogo'],
 	['admin', '/admin/catalogo/d-item-0'],
+	['admin', '/admin/catalogo/d-item-6'],
 	['admin', '/admin/mas'],
 	['admin', '/admin/clientes'],
 	['admin', '/admin/local'],

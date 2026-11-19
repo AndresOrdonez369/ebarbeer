@@ -4,6 +4,7 @@
 	import { amount, money } from '#lib/format.js';
 	import { live, once } from '#lib/live.svelte.js';
 	import { backend } from '#lib/session.svelte.js';
+	import { runningOut } from '#lib/stock.js';
 
 	const board = live(() => backend.dayBoard());
 	const totals = live(() => backend.dayTotals());
@@ -19,6 +20,9 @@
 				!setup.data.staff.some((s) => s.cuts && s.active) ||
 				!setup.data.staff.some((s) => s.role !== 'admin' && s.hasAccess))
 	);
+	// What is running out follows every sale.
+	const items = live(() => backend.catalogAll());
+	const low = $derived(items.data ? runningOut(items.data) : []);
 	const ranked = $derived(board.data ? [...board.data].sort((a, b) => b.cuts - a.cuts) : []);
 </script>
 
@@ -63,6 +67,14 @@
 	</p>
 {:else if totals.error}
 	<p class="facts err">{totals.error}</p>
+{/if}
+
+{#if low.length}
+	<a class="low" href="/admin/catalogo">
+		<span class="label">Por acabarse</span>
+		<span class="names">{low.map((i) => `${i.name} (${(i.stock ?? 0) > 0 ? i.stock : 'agotado'})`).join(' · ')}</span>
+		<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+	</a>
 {/if}
 
 {#if ranked.length}
@@ -150,6 +162,36 @@
 		font-size: var(--fs-fig-sm);
 		font-weight: 900;
 		white-space: nowrap;
+	}
+	.low {
+		display: grid;
+		grid-template-columns: 1fr 20px;
+		align-items: center;
+		gap: 2px 10px;
+		margin: 14px var(--gutter) 0;
+		padding: 10px 12px;
+		border: 1px solid var(--amber-deep);
+		border-radius: var(--r);
+		background: var(--wood);
+		color: inherit;
+		text-decoration: none;
+	}
+	.low .label {
+		color: var(--amber);
+	}
+	.low .names {
+		grid-column: 1;
+		font-weight: 700;
+		font-size: var(--fs-sm);
+	}
+	.low svg {
+		grid-row: 1 / span 2;
+		grid-column: 2;
+		width: 20px;
+		height: 20px;
+		fill: none;
+		stroke: var(--foam-dim);
+		stroke-width: 2;
 	}
 	.facts {
 		padding: 10px var(--gutter) 0;

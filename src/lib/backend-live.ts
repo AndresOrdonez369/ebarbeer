@@ -176,7 +176,7 @@ export function createLiveBackend(): Backend {
 		async catalog() {
 			const { data, error } = await sb
 				.from('catalog_items')
-				.select('id, kind, name, price, commission_pct, counts_as_cut')
+				.select('id, kind, name, price, commission_pct, counts_as_cut, stock, stock_min')
 				.eq('active', true)
 				.order('sort_order')
 				.order('name');
@@ -192,7 +192,9 @@ export function createLiveBackend(): Backend {
 					name: r.name,
 					price: r.price,
 					commissionPct: Number(r.commission_pct),
-					countsAsCut: r.counts_as_cut
+					countsAsCut: r.counts_as_cut,
+					stock: r.stock,
+					stockMin: r.stock_min
 				})
 			);
 			remember(CATALOG, items);
@@ -460,7 +462,7 @@ export function createLiveBackend(): Backend {
 		async catalogAll() {
 			const { data, error } = await sb
 				.from('catalog_items')
-				.select('id, kind, name, price, commission_pct, counts_as_cut, active, sort_order')
+				.select('id, kind, name, price, commission_pct, counts_as_cut, active, sort_order, stock, stock_min')
 				.order('sort_order')
 				.order('name');
 			if (error) throw toError(error, 'No se pudo cargar el catálogo.');
@@ -472,7 +474,9 @@ export function createLiveBackend(): Backend {
 				commissionPct: Number(r.commission_pct),
 				countsAsCut: r.counts_as_cut,
 				active: r.active,
-				sortOrder: r.sort_order
+				sortOrder: r.sort_order,
+				stock: r.stock,
+				stockMin: r.stock_min
 			}));
 		},
 
@@ -484,17 +488,25 @@ export function createLiveBackend(): Backend {
 				commission_pct: input.commissionPct,
 				counts_as_cut: input.kind === 'service' ? input.countsAsCut : false,
 				active: input.active,
-				sort_order: input.sortOrder
+				sort_order: input.sortOrder,
+				stock_min: input.kind === 'service' ? 0 : Math.max(0, Math.round(input.stockMin ?? 0))
 			};
 			const q = input.id
 				? sb.from('catalog_items').update(row).eq('id', input.id)
 				: sb.from('catalog_items').insert({ ...row, shop_id: shopId });
 			const { data, error } = await q
-				.select('id, kind, name, price, commission_pct, counts_as_cut, active, sort_order')
+				.select('id, kind, name, price, commission_pct, counts_as_cut, active, sort_order, stock, stock_min')
 				.single();
 			if (error) {
 				if (error.code === '23505') throw new AppError('Ya existe un ítem con ese nombre en esa pestaña.');
 				throw toError(error, 'No se pudo guardar.');
+			}
+			// A new drink or product can start its inventory right away.
+			let stock: number | null = data.stock;
+			if (!input.id && input.kind !== 'service' && input.stock != null) {
+				const r = await sb.rpc('adjust_stock', { p_item: data.id, p_kind: 'count', p_qty: input.stock, p_note: null });
+				if (r.error) throw toError(r.error, 'Se agregó, pero no se pudo guardar la cantidad. Escríbela en Inventario.');
+				stock = r.data as number;
 			}
 			return {
 				id: data.id,
@@ -504,8 +516,35 @@ export function createLiveBackend(): Backend {
 				commissionPct: Number(data.commission_pct),
 				countsAsCut: data.counts_as_cut,
 				active: data.active,
-				sortOrder: data.sort_order
+				sortOrder: data.sort_order,
+				stock,
+				stockMin: data.stock_min
 			};
+		},
+
+		async adjustStock(itemId, kind, qty = null, note = null) {
+			const { data, error } = await sb.rpc('adjust_stock', { p_item: itemId, p_kind: kind, p_qty: qty, p_note: note });
+			if (error) throw toError(error, 'No se pudo cambiar el inventario.');
+			return data as number | null;
+		},
+
+		async stockMoves(itemId) {
+			const { data, error } = await sb
+				.from('stock_moves')
+				.select('created_at, kind, delta, stock_after, note, sales(receipt_no), staff(display_name)')
+				.eq('item_id', itemId)
+				.order('created_at', { ascending: false })
+				.limit(30);
+			if (error) throw toError(error, 'No se pudo cargar el inventario.');
+			return (data ?? []).map((r) => ({
+				at: r.created_at,
+				kind: r.kind,
+				delta: r.delta,
+				after: r.stock_after,
+				receiptNo: (r.sales as unknown as { receipt_no: number } | null)?.receipt_no ?? null,
+				by: (r.staff as unknown as { display_name: string } | null)?.display_name ?? null,
+				note: r.note
+			}));
 		},
 
 		async customers(query) {
