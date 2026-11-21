@@ -255,10 +255,25 @@ export interface Closing {
 	closedBy: string | null;
 	/** The base the drawer opened with that day. */
 	openingCash: number;
+	/** Cash taken out of the drawer that day (not voided) when it was counted. */
+	cashOut: number;
 	expectedCash: number;
 	countedCash: number;
 	difference: number;
 	notes: string | null;
+}
+
+/** Cash taken out of the drawer ("sacar efectivo"): for what, by whom, and whether it was voided. */
+export interface CashOut {
+	id: string;
+	date: string;
+	amount: number;
+	reason: string;
+	takenAt: string;
+	takenBy: string | null;
+	voidedAt: string | null;
+	voidedBy: string | null;
+	voidReason: string | null;
 }
 
 /** The cash the drawer started a business day with ("abrir caja"). */
@@ -275,11 +290,15 @@ export interface Opening {
 /** The register's cash for one business day, its opening and its closing. */
 export interface CashDay {
 	date: string;
-	/** Base + cash charged that day − cash paid to barbers from the drawer. */
+	/** Base + cash charged that day − cash paid to barbers − cash taken out. */
 	expectedCash: number;
 	openingCash: number;
 	cashIn: number;
 	paidOut: number;
+	/** Cash taken out of the drawer (not voided). */
+	takenOut: number;
+	/** Every salida of the day, voided ones included, newest first. */
+	outs: CashOut[];
 	opening: Opening | null;
 	/** The base of the last day opened before this one, to suggest it. */
 	lastBase: number | null;
@@ -438,8 +457,14 @@ export interface Backend {
 	/** Opens the register with this base, or corrects it while the day is open. Today unless a date is given (admin). */
 	openRegister(amount: number, date?: string): Promise<Opening>;
 	closeRegister(date: string, counted: number, notes: string | null): Promise<Closing>;
+	/** Takes cash out of the drawer (today, or an earlier open day for the admin). */
+	takeCash(amount: number, reason: string, date?: string): Promise<CashOut>;
+	/** Voids a salida registered by mistake, while its day is open. */
+	voidCashOut(id: string, reason: string): Promise<CashOut>;
 	/** Admin: closings between two business dates, newest first. */
 	closings(from: string, to: string): Promise<Closing[]>;
+	/** Admin: salidas between two business dates, voided ones included, newest first. */
+	cashOuts(from: string, to: string): Promise<CashOut[]>;
 	bonusRules(): Promise<BonusRule[]>;
 	saveBonusRule(input: BonusRuleInput): Promise<BonusRule>;
 	/** Awards every closed period that met a rule and was not awarded yet. Returns how many. */

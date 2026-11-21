@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { parsePesos } from '#lib/bill.js';
+	import CashOutPanel from '#lib/components/CashOutPanel.svelte';
 	import OpenRegister from '#lib/components/OpenRegister.svelte';
 	import { addDays, amount, clock, dayLabel, money, moneyNb } from '#lib/format.js';
 	import { outbox } from '#lib/outbox.svelte.js';
@@ -99,16 +100,20 @@
 		}
 	}
 
-	// "Base $ 100.000 + cobrado en efectivo $ 445.000 − pagado a barberos $ 61.000", only when there is more than one part.
+	// "Base $ 100.000 + cobrado en efectivo $ 445.000 − pagado a barberos $ 61.000 − salidas $ 20.000",
+	// only when there is more than one part.
 	const calc = $derived.by(() => {
-		if (!day || (day.openingCash <= 0 && day.paidOut <= 0)) return '';
+		if (!day || (day.openingCash <= 0 && day.paidOut <= 0 && day.takenOut <= 0)) return '';
 		const s = [
 			day.openingCash > 0 ? `Base ${moneyNb(day.openingCash)} + c` : 'C',
 			`obrado en efectivo ${moneyNb(day.cashIn)}`,
-			day.paidOut > 0 ? ` − pagado a barberos ${moneyNb(day.paidOut)}` : ''
+			day.paidOut > 0 ? ` − pagado a barberos ${moneyNb(day.paidOut)}` : '',
+			day.takenOut > 0 ? ` − salidas ${moneyNb(day.takenOut)}` : ''
 		];
 		return s.join('');
 	});
+	// A cashier takes cash only from today; the admin also from an earlier day still open.
+	const canTake = $derived(date === today || session.profile?.role === 'admin');
 
 	const diffWords = (d: number) => (d === 0 ? 'Cuadra' : d < 0 ? `Faltan ${money(-d)}` : `Sobran ${money(d)}`);
 </script>
@@ -134,6 +139,7 @@
 			<p class="stamp">Caja cerrada</p>
 			<dl>
 				{#if c.openingCash > 0}<div><dt>Base</dt><dd class="fig">{money(c.openingCash)}</dd></div>{/if}
+				{#if c.cashOut > 0}<div><dt>Salidas de efectivo</dt><dd class="fig">−{money(c.cashOut)}</dd></div>{/if}
 				<div><dt>Debía haber</dt><dd class="fig">{money(c.expectedCash)}</dd></div>
 				<div><dt>Contado</dt><dd class="fig">{money(c.countedCash)}</dd></div>
 				<div class="d" class:short={c.difference < 0}>
@@ -144,6 +150,11 @@
 			{#if c.notes}<p class="notes">“{c.notes}”</p>{/if}
 			<p class="by">Cerró {c.closedBy ?? 'la caja'} · {clock(c.closedAt)}</p>
 		</div>
+		{#if day.outs.length}
+			<div class="closed-outs">
+				<CashOutPanel date={day.date} outs={day.outs} available={0} open={false} today={date === today} onchange={() => {}} />
+			</div>
+		{/if}
 		{#if date !== today && today}
 			<button type="button" class="btn btn-outline next" onclick={() => pick(today!)}>Ir al cierre de hoy</button>
 		{/if}
@@ -152,7 +163,7 @@
 			<span class="label">Debería haber en efectivo</span>
 			<span class="fig big">{money(day.expectedCash)}</span>
 			{#if calc}<span class="calc">{calc}</span>{/if}
-			<span class="hint">{day.openingCash > 0 ? 'La base con que abrió la caja, más lo' : 'Lo'} cobrado en efectivo {date === today ? 'hoy' : 'ese día'}, sin cuentas anuladas{day.paidOut > 0 ? ', menos lo que se les pagó a los barberos en efectivo' : ''}. Transferencias y tarjeta no van en el cajón.</span>
+			<span class="hint">{day.openingCash > 0 ? 'La base con que abrió la caja, más lo' : 'Lo'} cobrado en efectivo {date === today ? 'hoy' : 'ese día'}, sin cuentas anuladas{day.paidOut > 0 ? ', menos lo que se les pagó a los barberos en efectivo' : ''}{day.takenOut > 0 ? ', menos lo que se sacó del cajón' : ''}. Transferencias y tarjeta no van en el cajón.</span>
 		</div>
 
 		{#if date === today && !day.opening}
@@ -179,6 +190,15 @@
 				{/if}
 			</div>
 		{/if}
+
+		<CashOutPanel
+			date={day.date}
+			outs={day.outs}
+			available={day.expectedCash}
+			open={canTake}
+			today={date === today}
+			onchange={() => date && load(date)}
+		/>
 
 		{#if pending && date === today}
 			<p class="warn" role="status">
@@ -412,6 +432,9 @@
 	.next {
 		width: 100%;
 		margin-top: 14px;
+	}
+	.closed-outs {
+		margin-top: 22px;
 	}
 	.sk {
 		height: 320px;

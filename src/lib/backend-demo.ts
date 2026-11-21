@@ -10,6 +10,7 @@ import {
 	type Backend,
 	type BoardRow,
 	type BonusRule,
+	type CashOut,
 	type CatalogItem,
 	type Closing,
 	type Customer,
@@ -141,6 +142,8 @@ interface DemoState {
 	closings: Closing[];
 	/** Openings made in this demo; older days opened with DEMO_BASE. Missing in demos saved before it existed. */
 	openings?: Opening[];
+	/** Cash taken out of the drawer in this demo; some past days also show a synthetic one. */
+	cashOuts?: CashOut[];
 	/** Stock changes made in this demo; each item also shows a synthetic opening count. */
 	stockMoves?: DemoMove[];
 	/** Payments made at the register in this demo; past days are paid by the synthetic history. */
@@ -268,6 +271,7 @@ try {
 	/* keep the example names */
 }
 st.openings ??= [];
+st.cashOuts ??= [];
 st.stockMoves ??= [];
 lineSeq = st.lines.length + 1;
 function persist() {
@@ -586,27 +590,51 @@ function openingOf(date: string): Opening | null {
 		changedBy: null
 	};
 }
-/** The base, cash charged on a day, cash paid out to barbers, and what the drawer should hold. */
+/** Salidas of a day, newest first: the ones made in this demo, and a synthetic one on some past days. */
+function outsOf(date: string): CashOut[] {
+	const own = st.cashOuts!.filter((o) => o.date === date);
+	const past: CashOut[] =
+		date < todayIso() && isOpen(date) && hash('out' + date) < 0.3
+			? [
+					{
+						id: `d-out-${date}`,
+						date,
+						amount: 15000,
+						reason: 'Gastos del local',
+						takenAt: new Date(date + 'T15:20:00').toISOString(),
+						takenBy: cashierName(),
+						voidedAt: null,
+						voidedBy: null,
+						voidReason: null
+					}
+				]
+			: [];
+	return [...own, ...past].map((o) => ({ ...o })).sort((a, b) => b.takenAt.localeCompare(a.takenAt));
+}
+const takenOutOf = (date: string) => outsOf(date).reduce((s, o) => s + (o.voidedAt ? 0 : o.amount), 0);
+
+/** The base, cash charged on a day, cash paid out to barbers, cash taken out, and what the drawer should hold. */
 function cashOf(date: string) {
 	const today = todayIso();
-	if (date > today) return { opening: 0, cashIn: 0, paidOut: 0, expected: 0 };
+	if (date > today) return { opening: 0, cashIn: 0, paidOut: 0, takenOut: 0, expected: 0 };
 	const opening = openingOf(date)?.amount ?? 0;
+	const takenOut = takenOutOf(date);
 	if (date === today) {
 		const cashIn = methodsToday().cash;
 		const paidOut = st.settlements.filter((x) => x.date === today && x.method === 'cash').reduce((s, x) => s + x.commission + x.bonus, 0);
-		return { opening, cashIn, paidOut, expected: opening + cashIn - paidOut };
+		return { opening, cashIn, paidOut, takenOut, expected: opening + cashIn - paidOut - takenOut };
 	}
 	const cashIn = dayData(date).methods.cash;
 	const paidOut = st.team.filter((t) => t.cuts).reduce((s, t) => s + (pastPayout(t.id, date)?.total ?? 0), 0);
-	return { opening, cashIn, paidOut, expected: opening + cashIn - paidOut };
+	return { opening, cashIn, paidOut, takenOut, expected: opening + cashIn - paidOut - takenOut };
 }
 
 function closingOf(date: string): Closing | null {
 	const own = st.closings.find((c) => c.date === date);
-	if (own) return { ...own, openingCash: own.openingCash ?? 0 };
+	if (own) return { ...own, openingCash: own.openingCash ?? 0, cashOut: own.cashOut ?? 0 };
 	const today = todayIso();
 	if (date >= today || date < addDays(today, -90) || !isOpen(date)) return null;
-	const { expected, opening } = cashOf(date);
+	const { expected, opening, takenOut } = cashOf(date);
 	const r = hash('close' + date);
 	const difference = r < 0.72 ? 0 : r < 0.86 ? -2000 : r < 0.95 ? 1000 : -5000;
 	return {
@@ -614,6 +642,7 @@ function closingOf(date: string): Closing | null {
 		closedAt: new Date(addDays(date, 1) + 'T01:40:00').toISOString(),
 		closedBy: cashierName(),
 		openingCash: opening,
+		cashOut: takenOut,
 		expectedCash: expected,
 		countedCash: expected + difference,
 		difference,
@@ -1181,6 +1210,8 @@ export function createDemoBackend(): Backend {
 				openingCash: c.opening,
 				cashIn: c.cashIn,
 				paidOut: c.paidOut,
+				takenOut: c.takenOut,
+				outs: outsOf(date),
 				opening: openingOf(date),
 				lastBase: earlier?.amount ?? DEMO_BASE,
 				closing: closingOf(date)
@@ -1215,12 +1246,13 @@ export function createDemoBackend(): Backend {
 			if (current?.role === 'cashier' && date < addDays(todayIso(), -1))
 				throw new AppError('Solo el administrador puede cerrar días anteriores');
 			if (closingOf(date)) throw new AppError('Ese día ya tiene cierre');
-			const { expected, opening } = cashOf(date);
+			const { expected, opening, takenOut } = cashOf(date);
 			const c: Closing = {
 				date,
 				closedAt: new Date().toISOString(),
 				closedBy: current?.displayName ?? null,
 				openingCash: opening,
+				cashOut: takenOut,
 				expectedCash: expected,
 				countedCash: counted,
 				difference: counted - expected,
@@ -1229,6 +1261,62 @@ export function createDemoBackend(): Backend {
 			st.closings.push(c);
 			persist();
 			return { ...c };
+		},
+
+		async takeCash(amount, reason, date) {
+			await wait(250);
+			if (!current || current.role === 'barber') throw new AppError('No tienes permiso para esta acción');
+			const today = todayIso();
+			const d = date ?? today;
+			const why = reason.trim().slice(0, 120);
+			if (!Number.isInteger(amount) || amount < 1 || amount > 100000000) throw new AppError('Escribe cuánto efectivo sacas');
+			if (why.length < 3) throw new AppError('Escribe para qué se saca el efectivo');
+			if (d > today) throw new AppError('No se puede sacar efectivo de un día que no ha llegado');
+			if (current.role === 'cashier' && d !== today) throw new AppError('Solo el administrador puede registrar salidas de días anteriores');
+			if (closingOf(d)) throw new AppError('La caja de ese día ya está cerrada');
+			const left = cashOf(d).expected;
+			if (amount > left)
+				throw new AppError(
+					`En la caja debería haber $ ${Math.max(left, 0).toLocaleString('es-CO')} y no se puede sacar más. Si hay más efectivo, revisa la base o las cuentas.`
+				);
+			const o: CashOut = {
+				id: `d-out-${Date.now().toString(36)}`,
+				date: d,
+				amount,
+				reason: why,
+				takenAt: new Date().toISOString(),
+				takenBy: current.displayName,
+				voidedAt: null,
+				voidedBy: null,
+				voidReason: null
+			};
+			st.cashOuts!.push(o);
+			persist();
+			notify();
+			return { ...o };
+		},
+
+		async voidCashOut(id, reason) {
+			await wait(250);
+			if (!current || current.role === 'barber') throw new AppError('No tienes permiso para esta acción');
+			if (reason.trim().length < 3) throw new AppError('Escribe por qué se anula la salida');
+			const o = st.cashOuts!.find((x) => x.id === id) ?? outsOf(id.slice('d-out-'.length)).find((x) => x.id === id);
+			if (!o) throw new AppError('Salida no encontrada');
+			if (current.role === 'cashier' && o.date !== todayIso()) throw new AppError('Solo el administrador puede anular salidas de días anteriores');
+			if (closingOf(o.date)) throw new AppError('La caja de ese día ya está cerrada');
+			if (!o.voidedAt) {
+				o.voidedAt = new Date().toISOString();
+				o.voidedBy = current.displayName;
+				o.voidReason = reason.trim().slice(0, 120);
+				persist();
+				notify();
+			}
+			return { ...o };
+		},
+
+		async cashOuts(from, to) {
+			await wait(120);
+			return datesBetween(from, to).reverse().flatMap(outsOf);
 		},
 
 		async closings(from, to) {

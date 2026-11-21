@@ -722,6 +722,56 @@ await test('the barber and another shop cannot charge through it', async () => {
 	await rejects(as(U.otherAdmin, `select public.register_sale(gen_random_uuid(), $1, $2, null, false)`, [kikeCut, cutPay]), 'no disponible');
 });
 
+console.log('\nTaking cash out of the drawer');
+// Today was closed above; open it again for these.
+await db.query(`delete from cash_closings where business_date = public.business_date_at(shop_id)`);
+const drawer = () => one(U.cashier, `select * from public.cash_breakdown()`);
+let cigarettes;
+await test('a salida comes out of the expected cash and records who, how much and why', async () => {
+	const before = await drawer();
+	eq(before.taken_out, 0);
+	const o = await one(U.cashier, `select * from public.take_cash(20000, '  Cigarrillos  ')`);
+	cigarettes = o.id;
+	eq([o.amount, o.reason, o.taken_by === ids.luisa, o.voided_at], [20000, 'Cigarrillos', true, null]);
+	const after = await drawer();
+	eq([after.taken_out, before.expected - after.expected], [20000, 20000]);
+	eq((await one(U.cashier, `select public.my_expected_cash() as c`)).c, after.expected, 'the closing counts it');
+});
+await test('never more than the drawer should hold, never without a reason, only by the register', async () => {
+	const left = (await drawer()).expected;
+	await rejects(as(U.cashier, `select public.take_cash($1, 'Gastos')`, [left + 1]), 'En la caja debería haber $ ');
+	await rejects(as(U.cashier, `select public.take_cash(0, 'Gastos')`), 'cuánto efectivo');
+	await rejects(as(U.cashier, `select public.take_cash(1000, 'ab')`), 'para qué');
+	await rejects(as(U.cashier, `select public.take_cash(1000, 'Gastos', ${TODAY} - 1)`), 'Solo el administrador');
+	await rejects(as(U.admin, `select public.take_cash(1000, 'Gastos', ${TODAY} + 1)`), 'no ha llegado');
+	await rejects(as(U.kike, `select public.take_cash(1000, 'Gastos')`), 'permiso');
+	await rejects(as(U.cashier, `insert into cash_outs (shop_id, business_date, amount, reason, taken_by) select shop_id, current_date, 1, 'xxx', id from staff where username = 'luisa'`), 'permission denied');
+	await rejects(as(U.cashier, `update cash_outs set amount = 1`), 'permission denied');
+	eq((await as(U.kike, `select count(*)::int as n from cash_outs`))[0].n, 0, 'a barber sees none');
+	eq((await as(U.otherAdmin, `select count(*)::int as n from cash_outs`))[0].n, 0, 'another shop sees none');
+	eq((await as(U.cashier, `select count(*)::int as n from cash_outs`))[0].n, 1, 'the register sees today');
+});
+await test('a mistaken salida is voided with a reason, once, and the cash comes back', async () => {
+	const before = (await drawer()).expected;
+	await rejects(as(U.cashier, `select public.void_cash_out($1, 'x')`, [cigarettes]), 'por qué');
+	const v = await one(U.cashier, `select * from public.void_cash_out($1, 'Era de otro día')`, [cigarettes]);
+	eq([v.voided_by === ids.luisa, v.void_reason, v.voided_at != null], [true, 'Era de otro día', true]);
+	eq((await drawer()).expected - before, 20000);
+	const again = await one(U.admin, `select * from public.void_cash_out($1, 'Otra vez')`, [cigarettes]);
+	eq([again.void_reason, again.voided_by === ids.luisa], ['Era de otro día', true], 'voiding twice changes nothing');
+	await rejects(as(U.otherAdmin, `select public.void_cash_out($1, 'Ajeno')`, [cigarettes]), 'no encontrada');
+});
+await test('the closing records what was taken out; a closed day takes and voids nothing', async () => {
+	const supplies = (await one(U.cashier, `select * from public.take_cash(15000, 'Gastos del local')`)).id;
+	const b = await drawer();
+	const c = await one(U.cashier, `select * from public.close_register(${TODAY}, $1, null)`, [b.expected]);
+	eq([c.cash_out, c.expected_cash, c.difference], [15000, b.expected, 0]);
+	const h = await one(U.admin, `select cash_out from public.closing_history(${TODAY}, ${TODAY})`);
+	eq(h.cash_out, 15000);
+	await rejects(as(U.cashier, `select public.take_cash(1000, 'Tarde')`), 'ya está cerrada');
+	await rejects(as(U.admin, `select public.void_cash_out($1, 'Tarde')`, [supplies]), 'ya está cerrada');
+});
+
 console.log('\nBusiness day');
 await test('1:30 a.m. in Bogotá belongs to the previous day', async () => {
 	const r = (await db.query(`select public.business_date_at(id, '2026-11-11 01:30-05') as d from shops where slug='bar-beer'`)).rows[0];

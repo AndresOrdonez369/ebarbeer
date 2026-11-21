@@ -4,7 +4,7 @@
 	import { amount, clock, dayLabel, money, periodRange, type PeriodKind } from '#lib/format.js';
 	import { once } from '#lib/live.svelte.js';
 	import { backend } from '#lib/session.svelte.js';
-	import { AppError, type Closing } from '#lib/types.js';
+	import { AppError, type CashOut, type Closing } from '#lib/types.js';
 
 	const today = once(() => backend.businessDate());
 	let kind = $state<PeriodKind>('month');
@@ -12,6 +12,7 @@
 	const range = $derived(today.data ? periodRange(today.data, kind, offset) : null);
 
 	let rows = $state<Closing[] | null>(null);
+	let outs = $state<CashOut[]>([]);
 	let error = $state('');
 
 	$effect(() => {
@@ -19,13 +20,18 @@
 		if (!r) return;
 		rows = null;
 		error = '';
-		backend
-			.closings(r.from, r.to)
-			.then((d) => {
-				if (range === r) rows = d;
+		Promise.all([backend.closings(r.from, r.to), backend.cashOuts(r.from, r.to)])
+			.then(([d, o]) => {
+				if (range !== r) return;
+				rows = d;
+				outs = o;
 			})
 			.catch((e) => (error = e instanceof AppError ? e.message : 'No se pudieron cargar los cierres.'));
 	});
+
+	// What left the drawer each day, voided salidas aside.
+	const outsOn = (date: string) => outs.filter((o) => o.date === date && !o.voidedAt);
+	const takenTotal = $derived(outs.reduce((s, o) => s + (o.voidedAt ? 0 : o.amount), 0));
 
 	const net = $derived((rows ?? []).reduce((s, c) => s + c.difference, 0));
 	const off = $derived((rows ?? []).filter((c) => c.difference !== 0).length);
@@ -67,11 +73,19 @@
 							<small>de {money(c.expectedCash)}{c.openingCash > 0 ? ` · base ${amount(c.openingCash)}` : ''}</small>
 						</span>
 						<span class="d">{diffWords(c.difference)}</span>
+						{#if outsOn(c.date).length}
+							<p class="outs">
+								Salidas: {#each outsOn(c.date) as o, i (o.id)}{i ? ' · ' : ''}{o.reason} <b>{amount(o.amount)}</b>{/each}
+							</p>
+						{/if}
 						{#if c.notes}<p class="notes">“{c.notes}”</p>{/if}
 					</li>
 				{/each}
 			</ul>
-			<p class="legend">Contado en el cajón frente a lo que debía haber: la base con que abrió, más el efectivo cobrado, menos lo pagado en efectivo a los barberos.</p>
+			<p class="legend">
+				Contado en el cajón frente a lo que debía haber: la base con que abrió, más el efectivo cobrado, menos lo pagado en efectivo a los barberos y lo que
+				se sacó del cajón{takenTotal > 0 ? ` (${money(takenTotal)} en salidas este mes)` : ''}.
+			</p>
 		{/if}
 	{:else}
 		<div class="sk" aria-busy="true"></div>
@@ -143,6 +157,15 @@
 	}
 	.short .d {
 		color: var(--danger-text);
+	}
+	.outs {
+		grid-column: 1 / -1;
+		font-size: var(--fs-xs);
+		color: var(--foam-dim);
+	}
+	.outs b {
+		font-size: var(--fs-xs);
+		color: var(--foam);
 	}
 	.notes {
 		grid-column: 1 / -1;

@@ -7,6 +7,7 @@ import {
 	type Backend,
 	type BoardRow,
 	type BonusRule,
+	type CashOut,
 	type CatalogItem,
 	type Customer,
 	type DayTotals,
@@ -28,6 +29,24 @@ function toError(error: { message?: string; code?: string } | null, fallback: st
 	if (error?.code === '23505' && /username/.test(msg)) return new AppError('Ese usuario ya existe en el local.');
 	if (error?.code && ['22023', '42501', '23505', 'P0001'].includes(error.code) && msg) return new AppError(msg);
 	return new AppError(fallback);
+}
+
+const CASH_OUT =
+	'id, business_date, amount, reason, taken_at, voided_at, void_reason, taker:staff!cash_outs_taken_by_fkey(display_name), voider:staff!cash_outs_voided_by_fkey(display_name)';
+
+function cashOutFrom(r: Record<string, unknown>): CashOut {
+	const name = (x: unknown) => (x as { display_name: string | null } | null)?.display_name ?? null;
+	return {
+		id: r.id as string,
+		date: r.business_date as string,
+		amount: r.amount as number,
+		reason: r.reason as string,
+		takenAt: r.taken_at as string,
+		takenBy: name(r.taker),
+		voidedAt: (r.voided_at as string | null) ?? null,
+		voidedBy: name(r.voider),
+		voidReason: (r.void_reason as string | null) ?? null
+	};
 }
 
 function ruleFrom(r: Record<string, unknown>): BonusRule {
@@ -52,6 +71,7 @@ export function createLiveBackend(): Backend {
 
 	// The last good profile and catalog, so the register opens and charges into the queue offline.
 	const PROFILE = 'barbeer-profile';
+	const profileName = () => recall<Profile>(PROFILE)?.displayName ?? null;
 	const CATALOG = 'barbeer-catalog';
 	const remember = (key: string, value: unknown) => {
 		try {
@@ -600,11 +620,11 @@ export function createLiveBackend(): Backend {
 
 		async cashDay(date) {
 			const name = (x: unknown) => (x as { display_name: string } | null)?.display_name ?? null;
-			const [{ data: cash, error: e1 }, { data: k, error: e2 }, { data: o, error: e3 }, { data: last, error: e4 }] = await Promise.all([
+			const [{ data: cash, error: e1 }, { data: k, error: e2 }, { data: o, error: e3 }, { data: last, error: e4 }, { data: outs, error: e5 }] = await Promise.all([
 				sb.rpc('cash_breakdown', { p_date: date }),
 				sb
 					.from('cash_closings')
-					.select('business_date, closed_at, expected_cash, counted_cash, difference, notes, opening_cash, staff(display_name)')
+					.select('business_date, closed_at, expected_cash, counted_cash, difference, notes, opening_cash, cash_out, staff(display_name)')
 					.eq('business_date', date)
 					.maybeSingle(),
 				sb
@@ -614,16 +634,19 @@ export function createLiveBackend(): Backend {
 					)
 					.eq('business_date', date)
 					.maybeSingle(),
-				sb.from('cash_openings').select('amount').lt('business_date', date).order('business_date', { ascending: false }).limit(1).maybeSingle()
+				sb.from('cash_openings').select('amount').lt('business_date', date).order('business_date', { ascending: false }).limit(1).maybeSingle(),
+				sb.from('cash_outs').select(CASH_OUT).eq('business_date', date).order('taken_at', { ascending: false })
 			]);
-			if (e1 || e2 || e3 || e4) throw toError(e1 ?? e2 ?? e3 ?? e4, 'No se pudo cargar la caja.');
-			const c = (cash as { opening: number; cash_in: number; paid_out: number; expected: number }[] | null)?.[0];
+			if (e1 || e2 || e3 || e4 || e5) throw toError(e1 ?? e2 ?? e3 ?? e4 ?? e5, 'No se pudo cargar la caja.');
+			const c = (cash as { opening: number; cash_in: number; paid_out: number; taken_out: number; expected: number }[] | null)?.[0];
 			return {
 				date,
 				expectedCash: c?.expected ?? 0,
 				openingCash: c?.opening ?? 0,
 				cashIn: c?.cash_in ?? 0,
 				paidOut: c?.paid_out ?? 0,
+				takenOut: c?.taken_out ?? 0,
+				outs: (outs ?? []).map(cashOutFrom),
 				opening: o
 					? {
 							date: o.business_date,
@@ -641,6 +664,7 @@ export function createLiveBackend(): Backend {
 							closedAt: k.closed_at,
 							closedBy: name(k.staff),
 							openingCash: k.opening_cash,
+							cashOut: k.cash_out ?? 0,
 							expectedCash: k.expected_cash,
 							countedCash: k.counted_cash,
 							difference: k.difference,
@@ -671,11 +695,35 @@ export function createLiveBackend(): Backend {
 				closedAt: data.closed_at,
 				closedBy: null,
 				openingCash: data.opening_cash,
+				cashOut: data.cash_out ?? 0,
 				expectedCash: data.expected_cash,
 				countedCash: data.counted_cash,
 				difference: data.difference,
 				notes: data.notes
 			};
+		},
+
+		async takeCash(amount, reason, date) {
+			const { data, error } = await sb.rpc('take_cash', { p_amount: amount, p_reason: reason, p_date: date ?? null });
+			if (error) throw toError(error, 'No se pudo registrar la salida.');
+			return cashOutFrom({ ...data, taker: { display_name: profileName() } });
+		},
+
+		async voidCashOut(id, reason) {
+			const { data, error } = await sb.rpc('void_cash_out', { p_id: id, p_reason: reason });
+			if (error) throw toError(error, 'No se pudo anular la salida.');
+			return cashOutFrom({ ...data, voider: { display_name: profileName() } });
+		},
+
+		async cashOuts(from, to) {
+			const { data, error } = await sb
+				.from('cash_outs')
+				.select(CASH_OUT)
+				.gte('business_date', from)
+				.lte('business_date', to)
+				.order('taken_at', { ascending: false });
+			if (error) throw toError(error, 'No se pudieron cargar las salidas.');
+			return (data ?? []).map(cashOutFrom);
 		},
 
 		async closings(from, to) {
@@ -686,6 +734,7 @@ export function createLiveBackend(): Backend {
 				closedAt: r.closed_at,
 				closedBy: r.closed_by,
 				openingCash: r.opening_cash ?? 0,
+				cashOut: r.cash_out ?? 0,
 				expectedCash: r.expected_cash,
 				countedCash: r.counted_cash,
 				difference: r.difference,
