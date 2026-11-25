@@ -906,6 +906,9 @@ console.log('\nPhotos of the customer');
 		eq((await db.query(`select name from customers where id = $1`, [r.customer_id])).rows[0].name, 'Ana Rey');
 	});
 
+	await test('a malformed customer id reads as not found', () =>
+		rejects(start(U.dago, gen(), { id: 'd-c1' }, 'Nota', false, 0), 'Cliente no encontrado'));
+
 	await test('a visit saved without signal keeps the time it was taken', async () => {
 		const at = new Date(Date.now() - 26 * 3600 * 1000).toISOString();
 		const id = gen();

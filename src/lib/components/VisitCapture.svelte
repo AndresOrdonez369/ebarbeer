@@ -166,8 +166,7 @@
 							class="sr-only"
 							type="file"
 							accept="image/*"
-							capture="environment"
-							aria-label="{s ? 'Repetir' : 'Tomar'} foto: {a.label}"
+							aria-label="{s ? 'Cambiar' : 'Tomar o elegir'} foto: {a.label}"
 							onchange={(e) => take(a.angle, e)}
 						/>
 						{#if s}

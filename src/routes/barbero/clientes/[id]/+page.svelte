@@ -13,6 +13,7 @@
 	$effect(() => {
 		const c = id;
 		file = undefined;
+		error = '';
 		backend
 			.clientFile(c)
 			.then((f) => (file = f))

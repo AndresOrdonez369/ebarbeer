@@ -1673,6 +1673,7 @@ export function createDemoBackend(): Backend {
 			}
 			delete st.photoConsent![customerId];
 			persist();
+			return true;
 		},
 
 		async photoUsage() {

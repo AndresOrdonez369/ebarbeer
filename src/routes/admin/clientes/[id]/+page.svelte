@@ -23,6 +23,7 @@
 	}
 	$effect(() => {
 		file = undefined;
+		error = '';
 		load(id);
 	});
 
@@ -32,9 +33,11 @@
 		busy = true;
 		forgetError = '';
 		try {
-			await backend.forgetClientPhotos(id);
+			const gone = await backend.forgetClientPhotos(id);
 			asking = false;
-			done = 'Fotos borradas. Sus visitas y notas siguen, y ya no tiene autorización de fotos.';
+			done = gone
+				? 'Fotos borradas. Sus visitas y notas siguen, y ya no tiene autorización de fotos.'
+				: 'Fotos quitadas del registro y autorización retirada. Los archivos terminan de borrarse cuando vuelvas a abrir Clientes con conexión.';
 			load(id);
 		} catch (e) {
 			forgetError = e instanceof AppError ? e.message : 'No se pudieron borrar las fotos.';

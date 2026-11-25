@@ -1,16 +1,23 @@
 <!-- Visits saved on this phone that have not reached the server yet: waiting for signal, or refused. -->
 <script lang="ts">
 	import { net } from '../network.svelte.js';
-	import { discardVisit, retryVisit, visits } from '../visit-queue.svelte.js';
+	import { discardVisit, isMine, retryVisit, visits } from '../visit-queue.svelte.js';
 
 	let asking = $state<string | null>(null);
-	const pending = $derived(visits.items.filter((x) => x.status === 'pending').length);
-	const failed = $derived(visits.items.filter((x) => x.status === 'failed'));
+	const mine = $derived(visits.items.filter(isMine));
+	const pending = $derived(mine.filter((x) => x.status === 'pending').length);
+	const failed = $derived(mine.filter((x) => x.status === 'failed'));
+	const others = $derived(visits.items.length - mine.length);
 </script>
 
 {#if pending}
 	<p class="queue" role="status">
 		{pending === 1 ? '1 visita por subir' : `${pending} visitas por subir`} · {visits.sending ? 'subiendo' : net.online ? 'en espera' : 'sin conexión, se sube sola'}
+	</p>
+{/if}
+{#if others}
+	<p class="queue" role="status">
+		{others === 1 ? '1 visita de otro barbero espera' : `${others} visitas de otros barberos esperan`} en este teléfono: se suben cuando entre quien las tomó.
 	</p>
 {/if}
 {#each failed as f (f.draft.id)}

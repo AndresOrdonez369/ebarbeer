@@ -559,9 +559,12 @@ export interface Backend {
 	 * Returns the customer id. Keeps only the customer's last 3 visits with photos.
 	 */
 	saveVisit(draft: VisitDraft): Promise<string>;
-	/** Admin: removes every photo of a customer (visits and notes stay) and withdraws consent. */
-	forgetClientPhotos(customerId: string): Promise<void>;
-	/** Admin: space the photos use. */
+	/**
+	 * Admin: removes every photo of a customer (visits and notes stay) and withdraws consent.
+	 * False when the files could not be deleted yet (they go on the next try).
+	 */
+	forgetClientPhotos(customerId: string): Promise<boolean>;
+	/** Admin: space the photos use. Also deletes files left waiting in the trash. */
 	photoUsage(): Promise<PhotoUsage>;
 	/** Public: works without a session. Null when the token matches nothing. */
 	publicReceipt(token: string): Promise<PublicReceipt | null>;

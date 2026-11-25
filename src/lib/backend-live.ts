@@ -148,13 +148,15 @@ export function createLiveBackend(): Backend {
 	}
 
 	/** Removes the files waiting in the trash (older visits beyond the last 3). Best effort: the next upload tries again. */
-	async function empty(trash: string[] | null) {
-		if (!trash?.length) return;
+	async function empty(trash: string[] | null): Promise<boolean> {
+		if (!trash?.length) return true;
 		try {
 			const { error } = await sb.storage.from(PHOTOS).remove(trash);
-			if (!error) await sb.rpc('photo_trash_done');
+			if (error) return false;
+			await sb.rpc('photo_trash_done');
+			return true;
 		} catch {
-			/* next time */
+			return false; // next time
 		}
 	}
 
@@ -1042,10 +1044,14 @@ export function createLiveBackend(): Backend {
 		async forgetClientPhotos(customerId) {
 			const { data, error } = await sb.rpc('forget_client_photos', { p_customer: customerId });
 			if (error) throw toError(error, 'No se pudieron borrar las fotos.');
-			await empty(data as string[] | null);
+			const trash = data as string[] | null;
+			return (await empty(trash)) || (await empty(trash));
 		},
 
 		async photoUsage() {
+			// Files whose removal failed earlier (a cut connection) are deleted now.
+			const { data: waiting } = await sb.from('photo_trash').select('path').limit(100);
+			if (waiting?.length) await empty(waiting.map((w) => w.path as string));
 			const { data, error } = await sb.rpc('photo_usage');
 			if (error) throw toError(error, 'No se pudo leer el espacio de las fotos.');
 			const u = data as { bytes: number; photos: number; visits: number; clients: number };
