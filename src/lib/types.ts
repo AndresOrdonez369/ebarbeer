@@ -107,6 +107,78 @@ export interface CustomerStat {
 	spent: number;
 }
 
+/** The four photos of a visit, in the order the barber takes them. */
+export type PhotoAngle = 'front' | 'left' | 'right' | 'back';
+
+export interface ClientMatch {
+	id: string;
+	name: string | null;
+	/** Full for the admin and the register; "···0147" for the barbers. */
+	phone: string;
+	visits: number;
+	lastVisit: string | null;
+	/** Authorised keeping photos. */
+	consent: boolean;
+}
+
+export interface VisitPhoto {
+	angle: PhotoAngle;
+	/** Signed URLs, valid for a few hours. */
+	thumb: string;
+	full: string;
+}
+
+export interface ClientVisit {
+	id: string;
+	at: string;
+	barber: string | null;
+	/** Registered by whoever is looking. */
+	mine: boolean;
+	note: string | null;
+	photos: VisitPhoto[];
+	/** The photos were removed (to save space, or on request). */
+	photosGone: boolean;
+}
+
+export interface ClientFile {
+	id: string;
+	name: string | null;
+	phone: string;
+	consentAt: string | null;
+	minor: boolean;
+	visits: ClientVisit[];
+}
+
+/** A shrunk photo ready to upload. */
+export interface ShotFile {
+	angle: PhotoAngle;
+	full: Blob;
+	thumb: Blob;
+	/** 'webp', or 'jpg' where the phone cannot encode WebP. */
+	ext: 'webp' | 'jpg';
+}
+
+/** A visit saved on the phone, waiting to reach the server. */
+export interface VisitDraft {
+	id: string;
+	/** An existing customer by id, or a new one by WhatsApp. */
+	customer: { id?: string; phone?: string; name?: string | null };
+	note: string | null;
+	/** The customer authorises keeping their photos (asked once). */
+	consent: boolean;
+	minor: boolean;
+	photos: ShotFile[];
+	/** When it was saved on the phone (ISO). */
+	at: string;
+}
+
+export interface PhotoUsage {
+	bytes: number;
+	photos: number;
+	visits: number;
+	clients: number;
+}
+
 export interface ShopSettings {
 	name: string;
 	dailyCutGoal: number;
@@ -478,6 +550,19 @@ export interface Backend {
 	reportSummary(from: string, to: string): Promise<ReportSummary>;
 	reportLines(from: string, to: string): Promise<ReportLine[]>;
 	voidedSales(from: string, to: string): Promise<VoidedSale[]>;
+	/** Staff: customers by WhatsApp digits (4+) or name; empty: the latest visited. */
+	findClients(query: string): Promise<ClientMatch[]>;
+	/** Staff: a customer with their visits and photos. Null when not in this shop. */
+	clientFile(customerId: string): Promise<ClientFile | null>;
+	/**
+	 * Uploads a visit and its photos. Idempotent on draft.id: retrying finishes what is missing.
+	 * Returns the customer id. Keeps only the customer's last 3 visits with photos.
+	 */
+	saveVisit(draft: VisitDraft): Promise<string>;
+	/** Admin: removes every photo of a customer (visits and notes stay) and withdraws consent. */
+	forgetClientPhotos(customerId: string): Promise<void>;
+	/** Admin: space the photos use. */
+	photoUsage(): Promise<PhotoUsage>;
 	/** Public: works without a session. Null when the token matches nothing. */
 	publicReceipt(token: string): Promise<PublicReceipt | null>;
 	/** Calls back when the login is lost without the user leaving (expired, revoked). Returns an unsubscribe. */

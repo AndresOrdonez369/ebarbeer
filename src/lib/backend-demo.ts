@@ -12,7 +12,9 @@ import {
 	type BonusRule,
 	type CashOut,
 	type CatalogItem,
+	type ClientVisit,
 	type Closing,
+	type PhotoAngle,
 	type Customer,
 	type DayRow,
 	type ItemKind,
@@ -149,6 +151,20 @@ interface DemoState {
 	/** Payments made at the register in this demo; past days are paid by the synthetic history. */
 	settlements: DemoSettlement[];
 	voids: Record<string, { at: string; by: string }>;
+	/** Visits with photos (data URLs) made in this demo, plus two example ones. */
+	clientVisits?: DemoVisit[];
+	/** Customers who authorised photos: id → when, and whether a guardian did. */
+	photoConsent?: Record<string, { at: string; minor: boolean }>;
+}
+
+interface DemoVisit {
+	id: string;
+	customerId: string;
+	barberId: string;
+	at: string;
+	note: string | null;
+	photos: { angle: PhotoAngle; thumb: string; full: string; bytes: number }[];
+	photosGone: boolean;
 }
 
 let lineSeq = 0;
@@ -273,7 +289,42 @@ try {
 st.openings ??= [];
 st.cashOuts ??= [];
 st.stockMoves ??= [];
+st.photoConsent ??= { 'd-c1': { at: new Date(Date.now() - 40 * 86400000).toISOString(), minor: false } };
+st.clientVisits ??= exampleVisits();
 lineSeq = st.lines.length + 1;
+// A drawn head from four sides, for the example visits: no real person's photo in the demo.
+function headShot(angle: PhotoAngle, hair: string): string {
+	const ear = angle === 'left' ? '<ellipse cx="128" cy="150" rx="9" ry="16" fill="#c9a27e"/>' : angle === 'right' ? '<ellipse cx="72" cy="150" rx="9" ry="16" fill="#c9a27e"/>' : angle === 'front' ? '<ellipse cx="62" cy="150" rx="8" ry="15" fill="#c9a27e"/><ellipse cx="138" cy="150" rx="8" ry="15" fill="#c9a27e"/>' : '';
+	const face = angle === 'front' ? '<circle cx="86" cy="146" r="4" fill="#2a1d14"/><circle cx="114" cy="146" r="4" fill="#2a1d14"/><path d="M88 182q12 8 24 0" stroke="#2a1d14" stroke-width="3" fill="none"/>' : angle === 'back' ? '' : `<path d="M${angle === 'left' ? 64 : 136} 150l${angle === 'left' ? -10 : 10} 12l${angle === 'left' ? 10 : -10} 4" stroke="#a9825f" stroke-width="3" fill="none"/>`;
+	const cap = angle === 'back' ? `<path d="M58 150q0-72 42-72t42 72q-4 30-42 34q-38-4-42-34z" fill="${hair}"/>` : `<path d="M58 140q0-62 42-62t42 62q-10-30-42-32q-32 2-42 32z" fill="${hair}"/>`;
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><rect width="200" height="260" fill="#3a2a1f"/><rect x="40" y="215" width="120" height="60" rx="30" fill="#1d1712"/><ellipse cx="100" cy="150" rx="42" ry="56" fill="#c9a27e"/>${ear}${face}${cap}</svg>`;
+	return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
+function exampleVisits(): DemoVisit[] {
+	const shots = (hair: string) =>
+		(['front', 'left', 'right', 'back'] as PhotoAngle[]).map((angle) => {
+			const url = headShot(angle, hair);
+			return { angle, thumb: url, full: url, bytes: 115000 };
+		});
+	const day = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+	return [
+		{ id: 'd-v2', customerId: 'd-c1', barberId: 'd-dago', at: day(12), note: 'Degradado medio, 2 arriba con tijera. Barba perfilada.', photos: shots('#1a120c'), photosGone: false },
+		{ id: 'd-v1', customerId: 'd-c1', barberId: 'd-kike', at: day(33), note: 'Degradado bajo, 1 a los lados. Quiere dejar crecer arriba.', photos: shots('#22170f').slice(0, 2), photosGone: false }
+	];
+}
+
+// Full photos stay in memory (sessionStorage holds ~5 MB); after a reload the thumbnail stands in.
+const demoFull = new Map<string, string>();
+
+const blobUrl = (b: Blob) =>
+	new Promise<string>((res, rej) => {
+		const r = new FileReader();
+		r.onload = () => res(String(r.result));
+		r.onerror = () => rej(r.error);
+		r.readAsDataURL(b);
+	});
+
 function persist() {
 	try {
 		sessionStorage.setItem(STATE_KEY, JSON.stringify(st));
@@ -1516,6 +1567,124 @@ export function createDemoBackend(): Backend {
 					cashier: cashierName()
 				}))
 				.sort((a, b) => (b.voidedAt ?? '').localeCompare(a.voidedAt ?? ''));
+		},
+
+		async findClients(query) {
+			await wait(120);
+			if (!current) throw new AppError('No tienes permiso para esta acción');
+			const q = query.trim().toLowerCase();
+			const d = q.replace(/[^0-9]/g, '');
+			if (q && d.length < 4 && q.length < 2) return [];
+			const vs = st.clientVisits!;
+			const last = (id: string) => vs.filter((v) => v.customerId === id).map((v) => v.at).sort().at(-1) ?? null;
+			return st.customers
+				.filter((c) =>
+					!q ? vs.some((v) => v.customerId === c.id) : d.length >= 4 ? c.phone.includes(d) : (c.name ?? '').toLowerCase().includes(q)
+				)
+				.map((c) => ({
+					id: c.id,
+					name: c.name,
+					phone: current!.role === 'barber' ? '···' + c.phone.slice(-4) : c.phone,
+					visits: vs.filter((v) => v.customerId === c.id).length,
+					lastVisit: last(c.id),
+					consent: !!st.photoConsent![c.id]
+				}))
+				.sort((a, b) => (b.lastVisit ?? '').localeCompare(a.lastVisit ?? ''))
+				.slice(0, 12);
+		},
+
+		async clientFile(customerId) {
+			await wait(150);
+			if (!current) throw new AppError('No tienes permiso para esta acción');
+			const c = st.customers.find((x) => x.id === customerId);
+			if (!c) return null;
+			const consent = st.photoConsent![c.id];
+			const visits: ClientVisit[] = st.clientVisits!
+				.filter((v) => v.customerId === c.id)
+				.sort((a, b) => b.at.localeCompare(a.at))
+				.slice(0, 40)
+				.map((v) => ({
+					id: v.id,
+					at: v.at,
+					barber: nameOfId(v.barberId) ?? null,
+					mine: v.barberId === current!.staffId,
+					note: v.note,
+					photos: v.photos.map((p) => ({ angle: p.angle, thumb: p.thumb, full: p.full || demoFull.get(`${v.id}/${p.angle}`) || p.thumb })),
+					photosGone: v.photosGone
+				}));
+			return {
+				id: c.id,
+				name: c.name,
+				phone: current.role === 'barber' ? '···' + c.phone.slice(-4) : c.phone,
+				consentAt: consent?.at ?? null,
+				minor: consent?.minor ?? false,
+				visits
+			};
+		},
+
+		async saveVisit(draft) {
+			await wait(400);
+			if (!navigator.onLine) throw new NetworkError('Sin conexión.');
+			if (!current) throw new AppError('No tienes permiso para esta acción');
+			const known = st.clientVisits!.find((v) => v.id === draft.id);
+			if (known) return known.customerId;
+			let c = draft.customer.id ? st.customers.find((x) => x.id === draft.customer.id) : undefined;
+			if (draft.customer.id && !c) throw new AppError('Cliente no encontrado');
+			if (!c) {
+				if (!draft.customer.phone) throw new AppError('Escribe el WhatsApp del cliente');
+				const digits = normalizePhone(draft.customer.phone);
+				if (!digits) throw new AppError('Número de WhatsApp no válido');
+				const e164 = '+' + digits;
+				c = st.customers.find((x) => x.phone === e164);
+				if (!c) {
+					c = { id: `d-c${st.customers.length + 1}`, name: draft.customer.name?.trim() || null, phone: e164, promo: false };
+					st.customers.unshift(c);
+				} else if (!c.name && draft.customer.name?.trim()) c.name = draft.customer.name.trim();
+			}
+			if (draft.consent && !st.photoConsent![c.id]) st.photoConsent![c.id] = { at: new Date().toISOString(), minor: draft.minor };
+			if (draft.photos.length && !st.photoConsent![c.id]) throw new AppError('Falta la autorización del cliente para guardar sus fotos');
+			const note = draft.note?.trim().slice(0, 280) || null;
+			if (!draft.photos.length && !note) throw new AppError('Toma al menos una foto o escribe una nota');
+			const photos = [];
+			for (const p of draft.photos) {
+				demoFull.set(`${draft.id}/${p.angle}`, await blobUrl(p.full));
+				photos.push({ angle: p.angle, thumb: await blobUrl(p.thumb), full: '', bytes: p.full.size + p.thumb.size });
+			}
+			st.clientVisits!.unshift({ id: draft.id, customerId: c.id, barberId: current.staffId, at: draft.at || new Date().toISOString(), note, photos, photosGone: false });
+			// Keep the photos of the last 3 visits that have them.
+			st.clientVisits!
+				.filter((v) => v.customerId === c!.id && v.photos.length)
+				.sort((a, b) => b.at.localeCompare(a.at))
+				.slice(3)
+				.forEach((v) => {
+					v.photos = [];
+					v.photosGone = true;
+				});
+			persist();
+			return c.id;
+		},
+
+		async forgetClientPhotos(customerId) {
+			await wait(250);
+			if (current?.role !== 'admin') throw new AppError('No tienes permiso para esta acción');
+			for (const v of st.clientVisits!.filter((x) => x.customerId === customerId && x.photos.length)) {
+				v.photos = [];
+				v.photosGone = true;
+			}
+			delete st.photoConsent![customerId];
+			persist();
+		},
+
+		async photoUsage() {
+			await wait(120);
+			if (current?.role !== 'admin') throw new AppError('No tienes permiso para esta acción');
+			const vs = st.clientVisits!;
+			return {
+				bytes: vs.reduce((s, v) => s + v.photos.reduce((a, p) => a + p.bytes, 0), 0),
+				photos: vs.reduce((s, v) => s + v.photos.length, 0),
+				visits: vs.length,
+				clients: new Set(vs.map((v) => v.customerId)).size
+			};
 		},
 
 		async publicReceipt(t) {

@@ -9,7 +9,9 @@ import {
 	type BonusRule,
 	type CashOut,
 	type CatalogItem,
+	type ClientVisit,
 	type Customer,
+	type PhotoAngle,
 	type DayTotals,
 	type PayMethod,
 	type Profile,
@@ -47,6 +49,24 @@ function cashOutFrom(r: Record<string, unknown>): CashOut {
 		voidedBy: name(r.voider),
 		voidReason: (r.void_reason as string | null) ?? null
 	};
+}
+
+const PHOTOS = 'client-photos';
+/** Signed links last 6 hours; this phone reuses them for 5, so a thumbnail seen twice downloads once. */
+const SIGN_FOR = 6 * 3600;
+const REUSE_FOR = 5 * 3600 * 1000;
+const LINKS = 'barbeer-photo-links';
+
+/** Storage errors: offline is a connection problem; a refused upload means the visit no longer takes photos. */
+function storageError(e: { message?: string; statusCode?: string | number } | null, fallback: string): AppError {
+	const msg = e?.message ?? '';
+	const code = String(e?.statusCode ?? '');
+	if (typeof navigator !== 'undefined' && !navigator.onLine) return new NetworkError('Sin conexión.');
+	if (/fetch|network|timeout|load failed/i.test(msg) && !code) return new NetworkError('Sin conexión.');
+	if (code === '413' || /too large|maximum allowed size/i.test(msg)) return new AppError('Una foto pesa demasiado. Tómala de nuevo.');
+	if (code === '403' || /row-level security|unauthorized/i.test(msg))
+		return new AppError('La visita ya no acepta fotos (pasaron más de 3 días o el cliente retiró su autorización).');
+	return new AppError(fallback);
 }
 
 function ruleFrom(r: Record<string, unknown>): BonusRule {
@@ -96,6 +116,45 @@ export function createLiveBackend(): Backend {
 			return key ? (JSON.parse(localStorage.getItem(key) ?? 'null')?.user?.id ?? null) : null;
 		} catch {
 			return null;
+		}
+	}
+
+	// ─── Photos ─────────────────────────────────────────────────────────────
+	/** Signed links for private photos, reusing the ones this phone already has. */
+	async function signed(paths: string[]): Promise<Record<string, string>> {
+		const now = Date.now();
+		const cache = recall<Record<string, { url: string; until: number }>>(LINKS) ?? {};
+		for (const k of Object.keys(cache)) if (cache[k].until < now) delete cache[k];
+		const out: Record<string, string> = {};
+		const missing: string[] = [];
+		for (const p of new Set(paths)) {
+			if (cache[p]) out[p] = cache[p].url;
+			else missing.push(p);
+		}
+		if (missing.length) {
+			const { data, error } = await sb.storage.from(PHOTOS).createSignedUrls(missing, SIGN_FOR);
+			if (error) throw storageError(error, 'No se pudieron cargar las fotos.');
+			for (const x of data ?? []) {
+				if (!x.signedUrl || !x.path) continue;
+				out[x.path] = x.signedUrl;
+				cache[x.path] = { url: x.signedUrl, until: now + REUSE_FOR };
+			}
+			// Keep the newest 400 links at most.
+			const keys = Object.keys(cache).sort((a, b) => cache[b].until - cache[a].until);
+			for (const k of keys.slice(400)) delete cache[k];
+			remember(LINKS, cache);
+		}
+		return out;
+	}
+
+	/** Removes the files waiting in the trash (older visits beyond the last 3). Best effort: the next upload tries again. */
+	async function empty(trash: string[] | null) {
+		if (!trash?.length) return;
+		try {
+			const { error } = await sb.storage.from(PHOTOS).remove(trash);
+			if (!error) await sb.rpc('photo_trash_done');
+		} catch {
+			/* next time */
 		}
 	}
 
@@ -905,6 +964,92 @@ export function createLiveBackend(): Backend {
 				voidedBy: r.voided_by,
 				cashier: r.cashier
 			}));
+		},
+
+		async findClients(query) {
+			const { data, error } = await sb.rpc('find_clients', { p_q: query.trim() || null });
+			if (error) throw toError(error, 'No se pudo buscar el cliente.');
+			return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+				id: r.id as string,
+				name: (r.name as string | null) ?? null,
+				phone: r.phone as string,
+				visits: r.visits as number,
+				lastVisit: (r.last_visit as string | null) ?? null,
+				consent: r.consent as boolean
+			}));
+		},
+
+		async clientFile(customerId) {
+			const { data, error } = await sb.rpc('client_file', { p_customer: customerId });
+			if (error) throw toError(error, 'No se pudo abrir el cliente.');
+			if (!data) return null;
+			const raw = data as {
+				id: string; name: string | null; phone: string; consent_at: string | null; minor: boolean;
+				visits: { id: string; at: string; barber: string | null; mine: boolean; note: string | null; photos_gone: boolean;
+					photos: { angle: PhotoAngle; path: string; thumb: string }[] }[];
+			};
+			const links = await signed(raw.visits.flatMap((v) => v.photos.flatMap((p) => [p.thumb, p.path])));
+			const visits: ClientVisit[] = raw.visits.map((v) => ({
+				id: v.id,
+				at: v.at,
+				barber: v.barber,
+				mine: v.mine,
+				note: v.note,
+				photosGone: v.photos_gone,
+				photos: v.photos
+					.filter((p) => links[p.thumb] && links[p.path])
+					.map((p) => ({ angle: p.angle, thumb: links[p.thumb], full: links[p.path] }))
+			}));
+			return { id: raw.id, name: raw.name, phone: raw.phone, consentAt: raw.consent_at, minor: raw.minor, visits };
+		},
+
+		async saveVisit(d) {
+			const { data: r, error } = await sb.rpc('start_visit', {
+				p_id: d.id,
+				p_customer: d.customer,
+				p_note: d.note,
+				p_consent: d.consent,
+				p_minor: d.minor,
+				p_photos: d.photos.length,
+				p_at: d.at
+			});
+			if (error) throw toError(error, 'No se pudo guardar la visita.');
+			const v = r as { visit_id: string; customer_id: string; shop_id: string };
+			const base = `${v.shop_id}/${v.customer_id}/${v.visit_id}`;
+			const bucket = sb.storage.from(PHOTOS);
+			// A file already there is a retry after a cut connection: it counts as uploaded.
+			const put = async (name: string, blob: Blob, ext: string) => {
+				const { error: e } = await bucket.upload(`${base}/${name}`, blob, {
+					contentType: ext === 'jpg' ? 'image/jpeg' : 'image/webp',
+					cacheControl: '31536000',
+					upsert: false
+				});
+				const status = String((e as { statusCode?: string | number } | null)?.statusCode ?? '');
+				if (e && !(status === '409' || /already exists|duplicate/i.test(e.message))) throw storageError(e, 'No se pudo subir una foto.');
+			};
+			await Promise.all(
+				d.photos.flatMap((p) => [put(`${p.angle}.${p.ext}`, p.full, p.ext), put(`${p.angle}-t.${p.ext}`, p.thumb, p.ext)])
+			);
+			const { data: trash, error: e2 } = await sb.rpc('finish_visit', {
+				p_id: d.id,
+				p_photos: d.photos.map((p) => ({ angle: p.angle, ext: p.ext }))
+			});
+			if (e2) throw toError(e2, 'No se pudo guardar la visita.');
+			await empty(trash as string[] | null);
+			return v.customer_id;
+		},
+
+		async forgetClientPhotos(customerId) {
+			const { data, error } = await sb.rpc('forget_client_photos', { p_customer: customerId });
+			if (error) throw toError(error, 'No se pudieron borrar las fotos.');
+			await empty(data as string[] | null);
+		},
+
+		async photoUsage() {
+			const { data, error } = await sb.rpc('photo_usage');
+			if (error) throw toError(error, 'No se pudo leer el espacio de las fotos.');
+			const u = data as { bytes: number; photos: number; visits: number; clients: number };
+			return { bytes: Number(u.bytes), photos: Number(u.photos), visits: Number(u.visits), clients: Number(u.clients) };
 		},
 
 		async publicReceipt(token) {

@@ -69,6 +69,16 @@ await db.exec(`
   alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
   alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
   alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+  -- Storage: buckets and files, with row level security on the files.
+  create schema storage;
+  create table storage.buckets (id text primary key, name text not null, public boolean default false,
+    file_size_limit bigint, allowed_mime_types text[]);
+  create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets (id),
+    name text not null, owner uuid default auth.uid(), metadata jsonb, created_at timestamptz default now(), unique (bucket_id, name));
+  alter table storage.objects enable row level security;
+  grant usage on schema storage to anon, authenticated, service_role;
+  grant select, insert, update, delete on storage.objects to anon, authenticated;
+  grant select on storage.buckets to anon, authenticated;
 `);
 
 const migrations = readdirSync(join(root, 'migrations')).filter((f) => f.endsWith('.sql')).sort();
@@ -107,6 +117,7 @@ await db.exec(`
   select s.shop_id, s.id, i.id, 60 from public.staff s join public.catalog_items i on i.shop_id = s.shop_id
   where s.username = 'kike' and i.name = 'Corte + barba';
 `);
+const gen = () => crypto.randomUUID();
 const ids = {};
 for (const r of (await db.query(`select username as k, id from public.staff where shop_id = (select id from shops where slug='bar-beer')
                                  union all select name, id from public.catalog_items`)).rows)
@@ -771,6 +782,147 @@ await test('the closing records what was taken out; a closed day takes and voids
 	await rejects(as(U.cashier, `select public.take_cash(1000, 'Tarde')`), 'ya está cerrada');
 	await rejects(as(U.admin, `select public.void_cash_out($1, 'Tarde')`, [supplies]), 'ya está cerrada');
 });
+
+console.log('\nPhotos of the customer');
+{
+	const shop = (await db.query(`select id from shops where slug='bar-beer'`)).rows[0].id;
+	const v1 = 'aaaaaaaa-0000-4000-8000-000000000001';
+	const start = (u, id, customer, note = null, consent = false, photos = 4) =>
+		one(u, `select public.start_visit($1, $2, $3, $4, false, $5) as r`, [id, JSON.stringify(customer), note, consent, photos]).then((x) => x.r);
+	// What the Storage API does when the phone uploads or removes a file, under row level security.
+	const upload = (u, name, size = 90000) =>
+		as(u, `insert into storage.objects (bucket_id, name, metadata) values ('client-photos', $1, $2)`, [name, JSON.stringify({ size })]);
+	const remove = (u, name) => as(u, `delete from storage.objects where bucket_id = 'client-photos' and name = $1 returning name`, [name]);
+	const files = (r, angle, ext = 'webp') => [`${shop}/${r.customer_id}/${r.visit_id}/${angle}.${ext}`, `${shop}/${r.customer_id}/${r.visit_id}/${angle}-t.${ext}`];
+	let first;
+
+	await test('photos need the customer to authorise them; the visit is idempotent', async () => {
+		await rejects(start(U.kike, v1, { phone: '315 444 1212', name: 'Camilo Ruiz' }), 'autorización');
+		await rejects(start(U.kike, v1, { phone: '315 444 1212' }, '  ', false, 0), 'al menos una foto');
+		first = await start(U.kike, v1, { phone: '315 444 1212', name: 'Camilo Ruiz' }, 'Degradado bajo, 1 a los lados', true);
+		eq([first.duplicate, first.shop_id === shop], [false, true]);
+		const c = (await db.query(`select name, phone, photo_consent_at is not null as ok, photo_consent_by = $2 as by from customers where id = $1`, [first.customer_id, ids.kike])).rows[0];
+		eq(c, { name: 'Camilo Ruiz', phone: '+573154441212', ok: true, by: true });
+		const again = await start(U.kike, v1, { phone: '315 444 1212' }, 'otra', true);
+		eq([again.duplicate, again.customer_id === first.customer_id], [true, true]);
+		await rejects(start(U.dago, v1, { phone: '315 444 1212' }), 'no encontrada');
+	});
+
+	await test('a photo goes up only into your own visit, with the expected name', async () => {
+		for (const f of files(first, 'front')) await upload(U.kike, f);
+		await rejects(upload(U.dago, `${shop}/${first.customer_id}/${first.visit_id}/left.webp`), 'row-level security');
+		await rejects(upload(U.kike, `${shop}/${first.customer_id}/${first.visit_id}/selfie.webp`), 'row-level security');
+		await rejects(upload(U.kike, `${shop}/${first.customer_id}/${first.visit_id}/front.png`), 'row-level security');
+		await rejects(upload(U.otherAdmin, `${shop}/${first.customer_id}/${first.visit_id}/back.webp`), 'row-level security');
+		await rejects(upload('anon', `${shop}/${first.customer_id}/${first.visit_id}/back.webp`), 'row-level security');
+		await upload(U.admin, files(first, 'back')[0]);
+	});
+
+	await test('a visit of a customer who did not authorise takes no files', async () => {
+		const r = await start(U.dago, gen(), { phone: '316 000 1111', name: 'Sin fotos' }, 'Solo nota', false, 0);
+		await rejects(upload(U.dago, files(r, 'front')[0]), 'row-level security');
+	});
+
+	await test('finishing records the photos uploaded, and refuses one missing', async () => {
+		await rejects(as(U.kike, `select public.finish_visit($1, $2)`, [v1, JSON.stringify([{ angle: 'back' }])]), 'Falta subir');
+		await rejects(as(U.kike, `select public.finish_visit($1, $2)`, [v1, JSON.stringify([{ angle: 'top' }])]), 'no válido');
+		const t = await one(U.kike, `select public.finish_visit($1, $2) as t`, [v1, JSON.stringify([{ angle: 'front', ext: 'webp' }])]);
+		eq(t.t, []);
+		await one(U.kike, `select public.finish_visit($1, $2) as t`, [v1, JSON.stringify([{ angle: 'front', ext: 'webp' }])]);
+		eq((await db.query(`select count(*)::int as n, sum(bytes)::int as b from visit_photos where visit_id = $1`, [v1])).rows[0], { n: 1, b: 180000 });
+	});
+
+	await test('the file shows the visits; barbers see only the end of the number', async () => {
+		const k = (await one(U.dago, `select public.client_file($1) as f`, [first.customer_id])).f;
+		eq([k.name, k.phone, k.consent_at != null, k.visits.length], ['Camilo Ruiz', '···1212', true, 1]);
+		eq([k.visits[0].barber, k.visits[0].note, k.visits[0].mine, k.visits[0].photos.map((p) => p.angle)], ['Kike', 'Degradado bajo, 1 a los lados', false, ['front']]);
+		const c = (await one(U.cashier, `select public.client_file($1) as f`, [first.customer_id])).f;
+		eq(c.phone, '+573154441212');
+		eq((await one(U.otherAdmin, `select public.client_file($1) as f`, [first.customer_id])).f, null, 'another shop sees nothing');
+		await rejects(as('anon', `select public.client_file($1)`, [first.customer_id]), 'permission denied');
+		const found = await as(U.dago, `select name, phone, visits, consent from public.find_clients('4441212')`);
+		eq(found, [{ name: 'Camilo Ruiz', phone: '···1212', visits: 1, consent: true }]);
+		eq((await as(U.kike, `select name from public.find_clients('camilo')`)).map((r) => r.name), ['Camilo Ruiz']);
+		eq(await as(U.kike, `select name from public.find_clients('c')`), [], 'one letter finds nothing');
+		eq(await as(U.otherAdmin, `select name from public.find_clients('4441212')`), []);
+		eq((await as(U.dago, `select count(*)::int as n from storage.objects where bucket_id = 'client-photos'`))[0].n, 3, 'staff of the shop read the files');
+		eq((await as(U.otherAdmin, `select count(*)::int as n from storage.objects where bucket_id = 'client-photos'`))[0].n, 0, 'other shops do not');
+	});
+
+	await test('a customer keeps the photos of their last 3 visits; older files go to the trash', async () => {
+		const visits = [];
+		for (let i = 0; i < 3; i++) {
+			const id = gen();
+			const r = await start(U.kike, id, { id: first.customer_id }, `Visita ${i + 2}`, false, 1);
+			// Each visit a minute later than the one before.
+			await db.query(`update client_visits set taken_at = now() + ($2 || ' minutes')::interval where id = $1`, [id, i + 1]);
+			for (const f of files(r, 'left')) await upload(U.kike, f, 50000);
+			visits.push(await one(U.kike, `select public.finish_visit($1, $2) as t`, [id, JSON.stringify([{ angle: 'left' }])]));
+		}
+		eq(visits[0].t, []);
+		eq(visits[1].t, []);
+		eq(visits[2].t.sort(), files(first, 'front').sort(), 'the oldest visit is trashed');
+		const old = (await db.query(`select photos_gone_at is not null as gone, note from client_visits where id = $1`, [v1])).rows[0];
+		eq(old, { gone: true, note: 'Degradado bajo, 1 a los lados' }, 'the visit and its note stay');
+		eq((await db.query(`select count(*)::int as n from visit_photos where visit_id = $1`, [v1])).rows[0].n, 0);
+		eq((await remove(U.kike, files(first, 'back')[0])).length, 0, 'a file not in the trash stays');
+		eq((await remove(U.otherAdmin, files(first, 'front')[1])).length, 0, 'other shops cannot remove');
+		eq((await remove(U.dago, files(first, 'front')[0])).length, 1, 'any staff removes what is in the trash');
+		eq((await one(U.kike, `select public.photo_trash_done() as n`)).n, 1);
+		eq((await db.query(`select count(*)::int as n from photo_trash`)).rows[0].n, 1);
+	});
+
+	await test('the admin removes a customer’s photos on request; consent goes too', async () => {
+		await rejects(as(U.kike, `select public.forget_client_photos($1)`, [first.customer_id]), 'permiso');
+		const t = (await one(U.admin, `select public.forget_client_photos($1) as t`, [first.customer_id])).t;
+		eq(t.length, 7, 'three visits × two files, plus the thumbnail still waiting');
+		const c = (await db.query(`select photo_consent_at from customers where id = $1`, [first.customer_id])).rows[0];
+		eq(c.photo_consent_at, null);
+		const f = (await one(U.admin, `select public.client_file($1) as f`, [first.customer_id])).f;
+		eq([f.visits.length, f.visits.every((v) => v.photos_gone && !v.photos.length)], [4, true]);
+		await rejects(start(U.kike, gen(), { id: first.customer_id }), 'autorización');
+	});
+
+	await test('the record belongs to the customer: it stays when the barber who took it leaves', async () => {
+		await db.query(`update public.staff set active = false where id = $1`, [ids.kike]);
+		try {
+			const f = (await one(U.dago, `select public.client_file($1) as f`, [first.customer_id])).f;
+			eq([f.visits.length, f.visits.every((v) => v.barber === 'Kike')], [4, true], 'another barber sees every visit, with who cut');
+			const a = (await one(U.admin, `select public.client_file($1) as f`, [first.customer_id])).f;
+			eq(a.visits.length, 4, 'the admin too');
+			await rejects(as(U.kike, `select public.client_file($1)`, [first.customer_id]), 'permiso');
+			const r = await start(U.dago, gen(), { id: first.customer_id }, 'Lo atendió otro barbero', false, 0);
+			eq(r.customer_id, first.customer_id, 'a new barber keeps adding to the same record');
+		} finally {
+			await db.query(`update public.staff set active = true where id = $1`, [ids.kike]);
+		}
+	});
+
+	await test('a barber never renames a customer; a missing name is filled', async () => {
+		await start(U.dago, gen(), { phone: '315 444 1212', name: 'Otro Nombre' }, 'Nota', false, 0);
+		eq((await db.query(`select name from customers where id = $1`, [first.customer_id])).rows[0].name, 'Camilo Ruiz');
+		const r = await start(U.dago, gen(), { phone: '317 000 2222' }, 'Sin nombre', false, 0);
+		await start(U.dago, gen(), { phone: '317 000 2222', name: 'Ana Rey' }, 'Ya con nombre', false, 0);
+		eq((await db.query(`select name from customers where id = $1`, [r.customer_id])).rows[0].name, 'Ana Rey');
+	});
+
+	await test('a visit saved without signal keeps the time it was taken', async () => {
+		const at = new Date(Date.now() - 26 * 3600 * 1000).toISOString();
+		const id = gen();
+		await one(U.dago, `select public.start_visit($1, $2, 'Sin señal', false, false, 0, $3)`, [id, JSON.stringify({ phone: '317 000 2222' }), at]);
+		const v = (await db.query(`select taken_at, created_at > taken_at as later from client_visits where id = $1`, [id])).rows[0];
+		eq([new Date(v.taken_at).toISOString(), v.later], [at, true]);
+		const old = gen();
+		await one(U.dago, `select public.start_visit($1, $2, 'Muy vieja', false, false, 0, now() - interval '9 days')`, [old, JSON.stringify({ phone: '317 000 2222' })]);
+		eq((await db.query(`select taken_at > now() - interval '1 minute' as now from client_visits where id = $1`, [old])).rows[0].now, true, 'an impossible date becomes now');
+	});
+
+	await test('the admin sees how much space the photos use', async () => {
+		const u = (await one(U.admin, `select public.photo_usage() as u`)).u;
+		eq([u.visits, u.clients, u.photos, u.bytes > 0], [11, 3, 0, true]);
+		await rejects(as(U.kike, `select public.photo_usage()`), 'permiso');
+	});
+}
 
 console.log('\nBusiness day');
 await test('1:30 a.m. in Bogotá belongs to the previous day', async () => {

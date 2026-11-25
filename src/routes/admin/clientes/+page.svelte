@@ -3,7 +3,14 @@
 	import { amount, clock, dayLabel, toIsoDate } from '#lib/format.js';
 	import { prettyPhone } from '#lib/receipt.js';
 	import { backend } from '#lib/session.svelte.js';
-	import { AppError, type CustomerStat } from '#lib/types.js';
+	import { AppError, type CustomerStat, type PhotoUsage } from '#lib/types.js';
+
+	// The free plan's file storage; the photos are the only files.
+	const FREE = 1024 ** 3;
+	let usage = $state<PhotoUsage | null>(null);
+	backend.photoUsage().then((u) => (usage = u)).catch(() => {});
+	const mb = (b: number) => (b < 1024 ** 2 ? `${Math.max(1, Math.round(b / 1024))} kB` : `${(b / 1024 ** 2).toFixed(b < 100 * 1024 ** 2 ? 1 : 0).replace('.', ',')} MB`);
+	const share = $derived(usage ? Math.min(usage.bytes / FREE, 1) : 0);
 
 	let q = $state('');
 	let rows = $state<CustomerStat[] | null>(null);
@@ -41,7 +48,20 @@
 		Más
 	</a>
 	<h1 class="fig">Clientes</h1>
-	<p class="note">Quienes dejaron su WhatsApp al pagar. El teléfono solo se usa para su boleta; promociones, solo a quien las aceptó.</p>
+	<p class="note">Quienes dejaron su WhatsApp al pagar o en las fotos de un corte. El teléfono solo se usa para su boleta; promociones, solo a quien las aceptó. Toca un cliente para ver sus fotos y notas.</p>
+
+	{#if usage}
+		<div class="usage" class:tight={share > 0.8}>
+			<p>
+				<b>Fotos de clientes: {mb(usage.bytes)} de 1 GB</b>
+				<small>{usage.visits} {usage.visits === 1 ? 'visita' : 'visitas'} de {usage.clients} {usage.clients === 1 ? 'cliente' : 'clientes'} · se guardan las de las últimas 3 visitas de cada uno</small>
+			</p>
+			<span class="bar" role="meter" aria-label="Espacio usado por las fotos" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(share * 100)}>
+				<span style:width="{Math.max(share * 100, usage.bytes ? 1 : 0)}%"></span>
+			</span>
+			{#if share > 0.8}<small class="warn">Queda poco espacio gratis. Avísale a quien mantiene la app.</small>{/if}
+		</div>
+	{/if}
 
 	<label class="field search">
 		<span class="sr-only">Buscar por nombre o número</span>
@@ -58,6 +78,7 @@
 			<ul>
 				{#each rows as c (c.id)}
 					<li>
+						<a href="/admin/clientes/{c.id}">
 						<span class="who">
 							<b>{c.name ?? 'Sin nombre'}</b>
 							<small>{prettyPhone(c.phone)}{c.promo ? ' · acepta promociones' : ''}</small>
@@ -68,6 +89,8 @@
 								{#if c.visits}{c.visits} {c.visits === 1 ? 'visita' : 'visitas'}{c.lastVisit ? ` · ${when(c.lastVisit)}` : ''}{:else}Registrado sin cuentas{/if}
 							</small>
 						</span>
+						<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+						</a>
 					</li>
 				{/each}
 			</ul>
@@ -114,14 +137,58 @@
 		padding: 0;
 		border-top: 1px solid var(--line);
 	}
-	li {
-		display: flex;
-		justify-content: space-between;
+	li a {
+		display: grid;
+		grid-template-columns: 1fr auto auto;
 		align-items: center;
 		gap: 12px;
+		color: inherit;
+		text-decoration: none;
 		min-height: 62px;
 		padding: 6px 0;
 		border-bottom: 1px solid var(--line);
+	}
+	li a:hover .who b {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.chev {
+		color: var(--foam-dim);
+	}
+	.usage {
+		display: grid;
+		gap: 8px;
+		margin: 0 0 14px;
+		padding: 12px 0;
+		border-top: 1px solid var(--line);
+		border-bottom: 1px solid var(--line);
+	}
+	.usage p {
+		display: grid;
+		gap: 2px;
+	}
+	.usage b {
+		font-size: var(--fs-sm);
+	}
+	/* The level bar: wood with a foam fill; red only when the space runs short. */
+	.bar {
+		display: block;
+		height: 8px;
+		border: 1px solid var(--line-strong);
+		border-radius: var(--r);
+		background: var(--wood);
+		overflow: hidden;
+	}
+	.bar span {
+		display: block;
+		height: 100%;
+		background: var(--foam-dim);
+	}
+	.tight .bar span {
+		background: var(--red);
+	}
+	.warn {
+		color: var(--danger-text);
 	}
 	.who,
 	.stats {

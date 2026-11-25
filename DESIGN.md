@@ -683,6 +683,13 @@ Fotos reales de la barbería, enviadas por el cliente (originales en `brand-sour
 - **Pantalla de carga:** el mismo interior a pantalla completa al 28 % sobre el negro de barra, con el sello de marca grande al centro respirando como antes.
 - **Boleta pública:** el interior como portada de 236 px a sangre, con el mismo degradado y el sello de marca mediano encima; la hoja de la cuenta empieza 18 px debajo. Tras "Gracias", entre un filete, "Vuelve pronto" en cifra 1.25rem y una fila con desplazamiento horizontal de las tres fotos verticales (fachada, silla con barco, silla con repisa): cada una al 62 % del ancho, proporción 9:14, filete de 1 px, esquinas de 4 px, 8 px de separación, la siguiente asomando para que se lea que se desliza; encaja al soltar, se enfoca con teclado y lleva barra de desplazamiento fina en filete fuerte. Cargan solo al llegar a ellas.
 - **Carga y movimiento:** cada foto aparece con un fundido de 450 ms cuando terminó de llegar, para no pintarse a franjas; con movimiento reducido aparece sin fundido. Ninguna foto se mueve en reposo.
+
+### Fotos del cliente
+Son contenido, no decoración: la excepción a "sin fotos donde se trabaja". Solo en Barbero → Clientes y en Administración → Clientes.
+- **Tomar:** cuadrícula 2 × 2 de huecos 3:4 en madera con contorno discontinuo de filete fuerte y una cámara dibujada; con foto, contorno sólido, el ángulo sobre un degradado al pie y un botón de quitar de 36 px arriba a la derecha. Los huecos se apagan hasta que se marca la autorización (casilla global). Las fotos se achican en el teléfono: 1024 px de lado largo y una miniatura de 320 px, en WebP (JPEG donde no se puede).
+- **Historial:** cada visita es una fila con fecha y hora, quién cortó, la nota, y las cuatro miniaturas en fila (3:4, filete de 1 px). Tocarlas abre en el sitio, sin modal, las fotos grandes en una franja con desplazamiento horizontal al 82 % del ancho que encaja al soltar. Aparecen con el fundido de 450 ms de las fotos del local.
+- **Espacio:** en Clientes del administrador, una barra de nivel de madera con relleno espuma apagada; pasa a rojo solo por encima del 80 % del 1 GB gratis.
+- **Borrar:** confirmación en línea con recuadro rojo, porque quita.
 - **Privacidad:** la placa de la moto de la fachada va difuminada en la versión web.
 
 ## Do's and Don'ts
